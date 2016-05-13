@@ -5,6 +5,7 @@
 #include <libtelnet.h>
 
 class TelnetServer;
+class JSonModel;
 
 class TelnetSocket : public QObject
 {
@@ -17,9 +18,19 @@ public:
 
     void msgReveived(const QByteArray &msg);
 
-public slots:
-    void sendMsg(QString str);
+    QString dispatchCmd(QString cmd);
 
+    enum TelnetMode{
+        Basic,
+        Network,
+        Patch,
+        Application
+    };
+
+public slots:
+    void sendMsg(QString str, bool release=true);
+    void lockInput();
+    void releaseInput();
 signals:
 
 protected slots:
@@ -32,6 +43,15 @@ protected:
 
     telnet_t* _telnetInfo;
 
+    TelnetMode _mode=Basic;
+    JSonModel* model();
+    void switchMode(TelnetMode m);
+
+    bool _verbose=false;
+    bool _locked=true;
+    void setVerbose(bool verbose);
+
+    QStringList splitArgs(QString args, bool comaSplit=false);
 };
 
 #endif // TELNETSOCKET_H

@@ -1,12 +1,27 @@
 #include <QCoreApplication>
 #include "telnet/telnetserver.h"
+#include "xbee/xbeeinterface.h"
+#include "model/networkmodel.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
 
-    TelnetServer s;
-    s.startServer(9000);
 
-    return a.exec();
+    SXBeeInterface::init();
+    SNetworkModel::init();
+    STelnetServer::init();
+
+    SXBeeInterface::ptr()->start();
+    STelnetServer::ptr()->startServer(9000);
+
+    int r= a.exec();
+    SXBeeInterface::ptr()->terminate();
+    SXBeeInterface::ptr()->wait();
+
+    STelnetServer::clean();
+    SXBeeInterface::clean();
+    SNetworkModel::clean();
+
+    return r;
 }

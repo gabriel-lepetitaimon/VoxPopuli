@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/JSON">
+        <file alias="network.json">model/network.json</file>
+    </qresource>
+</RCC>

@@ -5,6 +5,9 @@
 #include <QTcpServer>
 
 #include "telnetsocket.h"
+#include "singleton.h"
+
+typedef singleton<TelnetServer> STelnetServer;
 
 class TelnetServer : public QTcpServer
 {

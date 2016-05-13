@@ -7,6 +7,7 @@ TelnetServer::TelnetServer(QObject *parent) : QTcpServer(parent)
     connect(this, SIGNAL(newConnection()), this, SLOT(newClient()));
     connect(this, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(connectError(QAbstractSocket::SocketError)));
 }
+
 bool TelnetServer::startServer(quint16 port)
 {
     if(listen(QHostAddress::Any, port)){
@@ -31,11 +32,8 @@ void TelnetServer::newClient()
 }
 void TelnetServer::deleteSocket(TelnetSocket* socket)
 {
-    for(int i=0; i<_sockets.size(); i++)
-        if(socket == _sockets.at(i)){
-            _sockets.removeAt(i);
-            delete socket;
-        }
+    if(_sockets.removeOne(socket))
+        delete socket;
 }
 
 

@@ -29,6 +29,9 @@ public:
      static int xbeeATResponse( xbee_dev_t *xbee, const void FAR *raw, uint16_t length, void FAR *context);
      void forcePort(std::string port);
 
+     bool sendRemoteAT( std::string cmd, char dest[9], std::function<int(std::vector<uint8_t>)> cb = [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
+     bool sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb= [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
+
 protected:
     void run();
 
@@ -36,16 +39,13 @@ protected:
     bool initialize();
     void standardRun();
 
-    bool sendRemoteAT( std::string cmd, char dest[9], std::function<int(std::string)> cb = [](std::string){return XBEE_ATCMD_DONE;});
-    bool sendAT(std::string cmd, std::function<int(std::string)> cb= [](std::string){return XBEE_ATCMD_DONE;});
-
 
 
 private:
     xbee_dev_t _xbee;
     XBeeState _state;
 
-    int prepareXBeeATCmd(std::string cmd, std::function<int(std::string)> cb);
+    int prepareXBeeATCmd(std::string cmd, std::function<int(std::vector<uint8_t>)> cb);
 
     std::string _forcePort;
 };

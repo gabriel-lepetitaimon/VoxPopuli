@@ -1,4 +1,6 @@
+#include "misc.h"
 #include "networkmodel.h"
+
 #include "xbee/xbeeinterface.h"
 
 NetworkModel::NetworkModel()
@@ -35,6 +37,21 @@ JSonNode::SetError NetworkModel::setValue(QString name, QString value)
     }
 
     return DoesNotExist;
+}
+
+bool NetworkModel::execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb)
+{
+    if(function == "sendAT"){
+        if(args.size()!=1)
+            return false;
+        SXBeeInterface::ptr()->sendAT(args.first().toStdString(),
+                                      [returnCb, args](std::vector<uint8_t> v)->int{
+                                                    returnCb("["+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
+                                                    return 0;
+                                        });
+        returnCb("");
+        return true;
+    }
 }
 
 /********************************************

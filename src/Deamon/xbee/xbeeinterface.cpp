@@ -1,9 +1,12 @@
 #include "xbeeinterface.h"
 
 #include <string.h>
+#include <vector>
 #include <QDebug>
+#include <iostream>
 
 #include "model/networkmodel.h"
+#include "misc.h"
 
 #ifdef POSIX
 #include <sys/ioctl.h>
@@ -92,7 +95,7 @@ void XBeeInterface::standardRun()
     while(1){
         if(_state!=CONNECTED)
             return;
-        xbee_cmd_tick();
+        xbee_dev_tick(&_xbee);
         msleep(5);
     }
 }
@@ -112,7 +115,7 @@ void XBeeInterface::forcePort(std::string port)
  *          CMD HANDLING           *
  **********************************/
 
-bool XBeeInterface::sendRemoteAT( std::string cmd, char dest[9], std::function<int(std::string)> cb)
+bool XBeeInterface::sendRemoteAT( std::string cmd, char dest[9], std::function<int(std::vector<uint8_t>)> cb)
 {
     int c = prepareXBeeATCmd(cmd, cb);
     if(c==-1)
@@ -126,7 +129,7 @@ bool XBeeInterface::sendRemoteAT( std::string cmd, char dest[9], std::function<i
 
 }
 
-bool XBeeInterface::sendAT(std::string cmd, std::function<int(std::string)> cb)
+bool XBeeInterface::sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb)
 {
     int c = prepareXBeeATCmd(cmd, cb);
     if(c==-1)
@@ -135,7 +138,7 @@ bool XBeeInterface::sendAT(std::string cmd, std::function<int(std::string)> cb)
     return xbee_cmd_send(c)==0;
 }
 
-int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<int (std::string)> cb)
+int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<int (std::vector<uint8_t>)> cb)
 {
     if(cmd.length() < 2)
         return -1;
@@ -143,19 +146,18 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<int (std::str
     int c = xbee_cmd_create(&_xbee, at);
 
     xbee_cmd_callback_fn cmdCb =  [](const xbee_cmd_response_t *rep) -> int {
-        std::function<int(std::string)> *cb = static_cast<std::function<int(std::string)>* >(rep->context);
-        char d[rep->value_length];
+        std::function<int(std::vector<uint8_t>)> *cb = static_cast<std::function<int(std::vector<uint8_t>)>* >(rep->context);
+        std::vector<uint8_t> d;
         for(int i=0; i<rep->value_length; i++)
-            d[i] = (char)rep->value_bytes[i];
-        std::string str(d);
-        int r = (*cb)(str);
+            d.push_back(rep->value_bytes[i]);
+        int r = (*cb)(d);
         delete cb;
         return r;
     };
-    xbee_cmd_set_callback(c, cmdCb, new std::function<int(std::string)>(cb));
+    xbee_cmd_set_callback(c, cmdCb, new std::function<int(std::vector<uint8_t>)>(cb));
 
-
-    xbee_cmd_set_param_bytes(c, cmd.substr(2).data(), cmd.size()-2);
+    std::vector<uint8_t> args = hexStrToInt(cmd.substr(2));
+    xbee_cmd_set_param_bytes(c, args.data(), args.size());
 
     return c;
 }
@@ -169,6 +171,7 @@ int XBeeInterface::xbeeATResponse(xbee_dev_t *xbee, const void *raw, uint16_t le
 const xbee_dispatch_table_entry_t xbee_frame_handlers[] =
 {
     XBEE_FRAME_HANDLE_LOCAL_AT,
+    XBEE_FRAME_HANDLE_REMOTE_AT,
     { XBEE_FRAME_LOCAL_AT_RESPONSE, 0, XBeeInterface::xbeeATResponse, NULL },
     XBEE_FRAME_TABLE_END
 };

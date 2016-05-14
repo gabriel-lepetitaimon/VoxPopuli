@@ -135,12 +135,12 @@ void JSonNode::valueChanged(QString name)
     emit(out(addr+name+": "+d));
 }
 
-bool JSonNode::call(const QString &functionName, const QStringList &arg, QString& result){
-    if(execFunction(functionName, arg, result))
+bool JSonNode::call(const QString &functionName, const QStringList &arg, const std::function<void(QString)>& returnCb){
+    if(execFunction(functionName, arg, returnCb))
         return true;
 
     if(functionName == "print"){
-        result = print();
+        returnCb(print());
         return true;
     }
     return false;
@@ -234,6 +234,7 @@ void JSonNode::clearJsonData()
 {
     foreach(JSonNode* n, _subnodes)
         delete n;
+    _subnodes.clear();
     _jsonData = QJsonObject();
 }
 
@@ -305,8 +306,10 @@ bool JSonModel::parseJSonFile()
 {
     QFile f(JSON);
 
-    if(!f.open(QIODevice::ReadOnly|QIODevice::Text))
+    if(!f.open(QIODevice::ReadOnly|QIODevice::Text)){
+        f.close();
         return false;
+    }
         ///TODO: error return
 
     QByteArray jsonData = f.readAll();
@@ -325,8 +328,12 @@ bool JSonModel::parseJSonFile()
 bool JSonModel::writeJSonFile()
 {
     QFile f(JSON);
-    if(!f.open(QIODevice::WriteOnly|QIODevice::Truncate|QIODevice::Text))
-        return false;
+    if(!f.open(QIODevice::WriteOnly|QIODevice::Truncate|QIODevice::Text)){
+        if(!f.setPermissions(QFile::WriteUser|f.permissions()))
+            return false;
+        if(!f.open(QIODevice::WriteOnly|QIODevice::Truncate|QIODevice::Text))
+            return false;
+    }
 
 
     _watch.removePath(JSON);

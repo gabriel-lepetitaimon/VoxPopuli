@@ -2,7 +2,9 @@
 #define TELNETSOCKET_H
 
 #include <QTcpSocket>
+#include <QTimer>
 #include <libtelnet.h>
+#include <string>
 
 class TelnetServer;
 class JSonModel;
@@ -18,7 +20,7 @@ public:
 
     void msgReveived(const QByteArray &msg);
 
-    QString dispatchCmd(QString cmd);
+    void dispatchCmd(QString cmd);
 
     enum TelnetMode{
         Basic,
@@ -28,7 +30,7 @@ public:
     };
 
 public slots:
-    void sendMsg(QString str, bool release=true);
+    void send(QString str, bool release=true);
     void lockInput();
     void releaseInput();
 signals:
@@ -52,6 +54,9 @@ protected:
     void setVerbose(bool verbose);
 
     QStringList splitArgs(QString args, bool comaSplit=false);
+
+private:
+    QTimer t;
 };
 
 #endif // TELNETSOCKET_H

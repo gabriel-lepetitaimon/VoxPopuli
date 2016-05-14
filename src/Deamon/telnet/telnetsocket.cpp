@@ -3,6 +3,8 @@
 #include "../model/networkmodel.h"
 
 #include <QCoreApplication>
+#include <QMetaMethod>
+#include <functional>
 
 void TelnetSocket::msgReveived(const QByteArray& msg)
 {
@@ -24,35 +26,41 @@ void TelnetSocket::msgReveived(const QByteArray& msg)
         setVerbose(false);
     else if(cmd=="#quit")
         qApp->quit();
-    else{
-    QString r = dispatchCmd(cmd);
-    sendMsg(r);
-    }
-
+    else
+        dispatchCmd(cmd);
 }
 
-QString TelnetSocket::dispatchCmd(QString cmd)
+void TelnetSocket::dispatchCmd(QString cmd)
 {
     JSonModel* m=model();
 
     if(!m)
-        return "";
+        return;
 
     QString address = "";
     if(cmd.contains('.'))
         address = cmd.left(cmd.lastIndexOf('.'));
     JSonNode* n = m->nodeByAddress(address);
     if(!n){
-        return address+" not found in "+m->name();
+        send("#Error: "+address+" not found in "+m->name());
+        return;
     }
+
     cmd = cmd.mid(address.length()+(address.length()?1:0));
+
+        // ---   FUNCTION HANDLING   ---
     if(cmd.contains('(')){
         QString function = cmd.left(cmd.indexOf('('));
-        QStringList args = splitArgs(cmd.mid(cmd.indexOf(')')).left(cmd.indexOf('(')));
-        QString r;
-        if(!n->call(function, args, r))
-            return function + " doesn't exist.";
-        return r;
+        cmd = cmd.left(cmd.indexOf(')'));
+        QStringList args = splitArgs(cmd.mid(cmd.indexOf('(')+1));
+        std::function<void(QString)> cb = [this](QString r){
+                    QMetaObject::invokeMethod(this, "send", Q_ARG(QString, r), Q_ARG(bool, true));
+        };
+        if(!n->call(function, args, cb))
+            send("#Error: "+function + " doesn't exist.");
+        return;
+
+        // ---  SET VARIABLE HANDLING  ---
     }else if(cmd.contains(':')){
         QString property = cmd.left(cmd.indexOf(':'));
         QString value = cmd.mid(property.length()+1);
@@ -63,23 +71,33 @@ QString TelnetSocket::dispatchCmd(QString cmd)
         switch(e){
         case JSonNode::SameValue:
         case JSonNode::NoError:
-            return "";
+            releaseInput();
+            return;
         case JSonNode::DoesNotExist:
-            return "Error: "+property+" is not a member of "+address;
+            send("#Error: "+property+" is not a member of "+address);
+            return;
         case JSonNode::ReadOnly:
-            return "Error: "+property+" is read only";
+            send( "#Error: "+property+" is read only");
+            return;
         case JSonNode::WrongArg:
-            return "Error: wrong value";
+            send("#Error: wrong value");
+            return;
         }
+
+        // ---  GET VARIABLE HANDLING  ---
     }else if(cmd.split(' ',QString::SkipEmptyParts).size()==1){
         while(cmd.at(cmd.size()-1)==' ')
             cmd.remove(cmd.size()-1);
         QString data = "";
-        if(!n->getToString(cmd,data))
-            return "#Error: "+address+(address.isEmpty()?"":".")+cmd+" doesn't exist.";
-        return address+(address.isEmpty()?"":".")+cmd+": "+data;
+        if(!n->getToString(cmd,data)){
+            send("#Error: "+address+(address.isEmpty()?"":".")+cmd+" doesn't exist.");
+            return;
+        }
+        send(address+(address.isEmpty()?"":".")+cmd+": "+data);
+        return;
     }
-    return "";
+
+    releaseInput();
 }
 
 JSonModel *TelnetSocket::model()
@@ -94,33 +112,35 @@ JSonModel *TelnetSocket::model()
     case TelnetSocket::Application:
         return 0;
     }
+
+    return 0;
 }
 
 void TelnetSocket::switchMode(TelnetSocket::TelnetMode m)
 {
     if(_verbose)
-        disconnect(model(), SIGNAL(out(QString)), this, SLOT(sendMsg(QString)));
+        disconnect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
 
     _mode = m;
 
     switch(m){
     case TelnetSocket::Basic:
-        sendMsg("#-1: Basic");
+        send("#-1: Basic");
         break;
     case TelnetSocket::Network:
-        sendMsg("#0: Network");
+        send("#0: Network");
         break;
     case TelnetSocket::Patch:
-        sendMsg("#1: Patch");
+        send("#1: Patch");
         break;
     case TelnetSocket::Application:
-        sendMsg("#2: Application");
+        send("#2: Application");
         break;
 
     }
 
     if(_verbose)
-        connect(model(), SIGNAL(out(QString)), this, SLOT(sendMsg(QString)));
+        connect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
 }
 
 void TelnetSocket::setVerbose(bool verbose)
@@ -129,11 +149,11 @@ void TelnetSocket::setVerbose(bool verbose)
         return;
     _verbose = verbose;
     if(verbose){
-        connect(model(), SIGNAL(out(QString)), this, SLOT(sendMsg(QString)));
-        sendMsg("#v: Verbose ON");
+        connect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
+        send("#v: Verbose ON");
     }else{
-        disconnect(model(), SIGNAL(out(QString)), this, SLOT(sendMsg(QString)));
-        sendMsg("#-v: Verbose OFF");
+        disconnect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
+        send("#-v: Verbose OFF");
     }
 }
 
@@ -205,7 +225,7 @@ TelnetSocket::TelnetSocket(QTcpSocket *socket, TelnetServer *server)
     connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 
-    sendMsg(server->serverInfo());
+    send(server->serverInfo());
 }
 
 TelnetSocket::~TelnetSocket()
@@ -246,12 +266,16 @@ void TelnetSocket::telnetEvent(telnet_t*, telnet_event_t *ev, void *user_data)
         return;
     }
 }
-void TelnetSocket::sendMsg(QString str, bool release)
+void TelnetSocket::send(QString str, bool release)
 {
+    if(!_locked)
+        telnet_printf(_telnetInfo, "\r");
     str = str+(str.isEmpty()?"":"\n");
     telnet_printf(_telnetInfo, str.toStdString().data());
 
-    if(release)
+    if(!_locked)
+        telnet_printf(_telnetInfo, ">");
+    else if(release)
         releaseInput();
 }
 
@@ -259,6 +283,7 @@ void TelnetSocket::lockInput(){
     if(_locked)
         return;
     _locked = true;
+    t.singleShot(2000, this, SLOT(releaseInput()));
 }
 
 void TelnetSocket::releaseInput()
@@ -267,4 +292,5 @@ void TelnetSocket::releaseInput()
         return;
     telnet_printf(_telnetInfo, ">");
     _locked = false;
+    t.stop();
 }

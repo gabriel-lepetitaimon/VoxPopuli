@@ -9,6 +9,7 @@
 #include <QFileSystemWatcher>
 #include <QTimer>
 #include <QVariant>
+#include <functional>
 
 class JSonNode;
 class JSonModel;
@@ -30,7 +31,7 @@ public:
     QVariant get(const QString& name);
     bool getToString(const QString& name, QString &result) const;
     SetError set(const QString& name, const QString& value);
-    bool call(const QString& functionName, const QStringList& arg, QString &result);
+    bool call(const QString& functionName, const QStringList& arg, const std::function<void(QString)> &returnCb=[](QString){});
 
 public:
     const QString&      name()          const {return _name;}
@@ -60,7 +61,7 @@ protected:
     SetError setNumber(QString name, QString value);
     SetError setBool(QString name, QString value);
 
-    virtual bool execFunction(QString function, QStringList args, QString& result) {return false;}
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){}) {return false;}
     virtual QString print() const;
 
     QString _name;
@@ -81,7 +82,6 @@ class JSonModel : public JSonNode
 
 public:
     JSonNode *nodeByAddress(QString address);
-
     virtual ~JSonModel(){}
 
 signals:

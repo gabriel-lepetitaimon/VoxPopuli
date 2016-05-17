@@ -30,7 +30,7 @@ public:
     };
 
 public slots:
-    void send(QString str, bool release=true);
+    void send(QString str, bool release=false);
     void lockInput();
     void releaseInput();
 signals:

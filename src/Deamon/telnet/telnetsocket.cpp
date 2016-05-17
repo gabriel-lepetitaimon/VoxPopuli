@@ -42,7 +42,7 @@ void TelnetSocket::dispatchCmd(QString cmd)
         address = cmd.left(cmd.lastIndexOf('.'));
     JSonNode* n = m->nodeByAddress(address);
     if(!n){
-        send("#Error: "+address+" not found in "+m->name());
+        send("#Error: "+address+" not found in "+m->name(), true);
         return;
     }
 
@@ -57,7 +57,7 @@ void TelnetSocket::dispatchCmd(QString cmd)
                     QMetaObject::invokeMethod(this, "send", Q_ARG(QString, r), Q_ARG(bool, true));
         };
         if(!n->call(function, args, cb))
-            send("#Error: "+function + " doesn't exist.");
+            send("#Error: "+function + " doesn't exist.", true);
         return;
 
         // ---  SET VARIABLE HANDLING  ---
@@ -136,8 +136,8 @@ void TelnetSocket::switchMode(TelnetSocket::TelnetMode m)
     case TelnetSocket::Application:
         send("#2: Application");
         break;
-
     }
+    releaseInput();
 
     if(_verbose)
         connect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
@@ -155,6 +155,7 @@ void TelnetSocket::setVerbose(bool verbose)
         disconnect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
         send("#-v: Verbose OFF");
     }
+    releaseInput();
 }
 
 
@@ -225,7 +226,7 @@ TelnetSocket::TelnetSocket(QTcpSocket *socket, TelnetServer *server)
     connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 
-    send(server->serverInfo());
+    send(server->serverInfo(), true);
 }
 
 TelnetSocket::~TelnetSocket()

@@ -142,7 +142,7 @@ void JSonNode::valueChanged(QString name)
     if(!addr.isEmpty()) addr+".";
     QString d;
     getToString(name, d);
-    emit(out(addr+name+": "+d));
+    emit out(addr+(addr.isEmpty()?"":".")+name+": "+d);
 }
 
 bool JSonNode::call(const QString &functionName, const QStringList &arg, const std::function<void(QString)>& returnCb){
@@ -167,9 +167,10 @@ JSonNode *JSonNode::nodeAt(QString name)
 
 QString JSonNode::address() const
 {
-    QString r=_name;
     if(!_parentNode)
-        return r;
+        return "";
+
+    QString r=_name;
 
     JSonNode* n = _parentNode;
     while(n->_parentNode){
@@ -266,6 +267,11 @@ JSonNode *JSonModel::nodeByAddress(QString address)
             return 0;
     }
     return n;
+}
+
+JSonModel::~JSonModel(){
+    if(QFile(JSON).exists())
+        QFile::remove(JSON);
 }
 
 bool JSonModel::loadFile(QString path)

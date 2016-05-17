@@ -11,6 +11,8 @@
 #include <QVariant>
 #include <functional>
 
+#include <QDebug>
+
 class JSonNode;
 class JSonModel;
 
@@ -83,10 +85,8 @@ class JSonModel : public JSonNode
 
 public:
     JSonNode *nodeByAddress(QString address);
-    virtual ~JSonModel(){}
+    virtual ~JSonModel();
 
-signals:
-    void out(QString data);
 
 public slots:
     bool loadFile(QString path);

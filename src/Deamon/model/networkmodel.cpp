@@ -101,10 +101,11 @@ bool RemoteList::addRemote(QString address)
 void RemoteList::removeRemote(QString address)
 {
     for (int i = 0; i < _remotes.size(); ++i) {
-        if(_remotes[i]->address() == address){
+        if(_remotes[i]->get("MAC").toString() == address){
             _jsonData.remove(_remotes[i]->name());
             emit( out(_remotes[i]->name() + " disconnected") );
             _remotes.removeAt(i);
+            updateParentJSon();
             return;
         }
     }
@@ -193,7 +194,8 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
     if(function == "sendAT"){
         if(args.size()!=1)
             return false;
-        remote()->sendAT(args.first().toStdString(),
+        if(remote())
+            remote()->sendAT(args.first().toStdString(),
                                       [returnCb, args, this](std::vector<uint8_t> v)->int{
                                                     returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
                                                     return 0;

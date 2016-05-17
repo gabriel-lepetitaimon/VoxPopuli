@@ -33,7 +33,7 @@ void TelnetServer::newClient()
 void TelnetServer::deleteSocket(TelnetSocket* socket)
 {
     if(_sockets.removeOne(socket))
-        delete socket;
+        socket->deleteLater();
 }
 
 

@@ -39,6 +39,8 @@ public:
      bool sendRemoteAT( std::string cmd, const uint8_t dest[9], std::function<int(std::vector<uint8_t>)> cb = [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
      bool sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb= [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
 
+     bool sendRemoteTX(std::string cmd, const uint8_t dest[9]);
+
      std::vector<std::string> listPort() const;
      void scanNetwork();
 
@@ -70,7 +72,7 @@ private:
     bool removeRemote(std::vector<uint8_t> addr);
     static int handleScanResponse(std::vector<uint8_t> response);
 
-
+    int16_t generateFrameID(int recursion=1) const;
 
     std::string _port;
     bool _forcePort=false;

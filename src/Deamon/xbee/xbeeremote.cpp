@@ -22,6 +22,6 @@ bool XBeeRemote::sendAT(std::string cmd, std::function<int (std::vector<uint8_t>
 
 bool XBeeRemote::sendRX(std::string cmd) const
 {
-    return false;
+    return _interface->sendRemoteTX(cmd, _addr.data());
 }
 

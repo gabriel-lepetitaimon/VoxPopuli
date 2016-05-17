@@ -43,6 +43,11 @@ void XBeeInterface::scanNetwork()
     _scanNeeded = false;
 }
 
+
+/***********************************
+ *        THREAD HANDLING          *
+ **********************************/
+
 void XBeeInterface::run()
 {
     while(1){
@@ -70,12 +75,6 @@ void XBeeInterface::run()
         msleep(1000);
     }
 }
-
-
-/***********************************
- *        THREAD HANDLING          *
- **********************************/
-
 
 bool XBeeInterface::tryToConnect()
 {
@@ -182,8 +181,10 @@ void XBeeInterface::forcePort(std::string port)
 
 
 /***********************************
- *          CMD HANDLING           *
+ *        AT CMD HANDLING          *
  **********************************/
+
+//----------  SEND   ---------------
 
 bool XBeeInterface::sendRemoteAT(std::string cmd, const uint8_t dest[], std::function<int(std::vector<uint8_t>)> cb)
 {
@@ -259,9 +260,7 @@ bool XBeeInterface::isStillConnected()
     return false;
 }
 
-/***********************************
- *          CMD HANDLING           *
- **********************************/
+//----------  RESPONSE  ------------
 
 int XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
 {
@@ -307,9 +306,72 @@ bool XBeeInterface::removeRemote(std::vector<uint8_t> addr)
 }
 
 
+/***********************************
+ *           TX HANDLING           *
+ **********************************/
+
+//----------  SEND   ---------------
+
+bool XBeeInterface::sendRemoteTX(std::string cmd, const uint8_t dest[])
+{
+    std::vector<uint8_t> header;
+    int16_t c;
+
+    header.push_back(XBEE_FRAME_TRANSMIT);          //frame type
+    if( (c=generateFrameID()) !=-1) header.push_back(c);    //frame ID
+    else return false;
+
+    for(int i=0;i<8;i++) header.push_back(dest[i]); //address
+    header.push_back(0xFF);         //16bit address
+    header.push_back(0xFE);
+
+    header.push_back(0x00);         //Broadcast radius
+    header.push_back(0x00);         //Options
+
+    return !xbee_frame_write(&_xbee, header.data(), header.size(), cmd.data(), cmd.length(), XBEE_DEV_FLAG_NONE);
+}
+
+int16_t XBeeInterface::generateFrameID(int recursion) const
+{
+    xbee_cmd_request_t FAR *request;
+    int_fast8_t index;
+    request = xbee_cmd_request_table;
+    for (index = 0; index < XBEE_CMD_REQUEST_TABLESIZE; ++request, ++index){
+        if (request->device == NULL)
+            break;
+    }
+
+    if(index == XBEE_CMD_REQUEST_TABLESIZE){
+        if(!recursion)
+            return -1;
+
+        xbee_cmd_tick();
+        return generateFrameID(recursion-1);
+    }
+
+
+
+
+    return (index << 8) | request->sequence;
+}
+
+//----------  RESPONSE  ------------
+
+int XBeeInterface::xbeeTX(xbee_dev_t *, const void *raw, uint16_t length, void *context)
+{
+
+    return XBEE_ATCMD_REUSE;
+}
+
+
+/***********************************
+ *          XBEE LIB PARAM         *
+ **********************************/
+
 const xbee_dispatch_table_entry_t xbee_frame_handlers[] =
 {
     XBEE_FRAME_HANDLE_LOCAL_AT,
     XBEE_FRAME_HANDLE_REMOTE_AT,
+    {XBEE_FRAME_RECEIVE, 0, XBeeInterface::xbeeTX, NULL},
     XBEE_FRAME_TABLE_END
 };

@@ -24,7 +24,8 @@ SOURCES += VPDeamon.cpp \
     xbee/xbeeinterface.cpp \
     model/model.cpp \
     model/networkmodel.cpp\
-    $$SRC/lib/misc.cpp
+    $$SRC/lib/misc.cpp \
+    xbee/xbeeremote.cpp
 
 HEADERS += \
     telnet/telnetserver.h \
@@ -33,7 +34,8 @@ HEADERS += \
     model/model.h \
     model/networkmodel.h\
     $$SRC/lib/singleton.h\
-    $$SRC/lib/misc.h
+    $$SRC/lib/misc.h \
+    xbee/xbeeremote.h
 
 
     

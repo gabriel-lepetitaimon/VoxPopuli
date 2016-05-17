@@ -27,24 +27,22 @@ public:
         WrongArg
     };
 
-public:
-    QVariant get(const QString& name);
-    bool getToString(const QString& name, QString &result) const;
-    SetError set(const QString& name, const QString& value);
-    bool call(const QString& functionName, const QStringList& arg, const std::function<void(QString)> &returnCb=[](QString){});
 
-public:
     const QString&      name()          const {return _name;}
     JSonNode*           nodeAt(QString name);
     JSonNode*           parentNode()    const {return _parentNode;}
 
     QString             address() const;
+    QVariant get(const QString& name);
+    bool getToString(const QString& name, QString &result) const;
+
+    bool populateNode(const QJsonObject &data);
 
     virtual ~JSonNode();
 
-    virtual bool createSubNode(QString name, QJsonValueRef data);
-    bool populateNode(QJsonValueRef &data);
-    bool populateNode(QJsonObject data);
+public slots:
+    SetError set(const QString& name, const QString& value);
+    bool call(const QString& functionName, const QStringList& arg, const std::function<void(QString)> &returnCb=[](QString){});
 
 signals:
     void out(QString data);
@@ -53,13 +51,16 @@ protected:
     JSonNode(QString name, JSonNode *parent);
 
     virtual void updateParentJSon();
+    virtual bool createSubNode(QString name, const QJsonObject& data);
     void addSubNode(JSonNode* node);
     void clearJsonData();
 
     virtual SetError setValue(QString name, QString value);
     JSonNode::SetError setString(QString name, QString value);
     SetError setNumber(QString name, QString value);
+    SetError setNumber(QString name, double value);
     SetError setBool(QString name, QString value);
+    SetError setBool(QString name, bool value);
 
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){}) {return false;}
     virtual QString print() const;

@@ -3,13 +3,20 @@
 
 #include <QThread>
 #include <functional>
-
+#include <string>
+#include <vector>
 #include "xbee/platform.h"
 #include "xbee/byteorder.h"
 #include "xbee/device.h"
 #include "xbee/atcmd.h"
 #include "wpan/types.h"
+
+
 #include "singleton.h"
+
+#include "xbeeremote.h"
+
+#define FRAMERATE 200
 
 class XBeeInterface;
 typedef singleton<XBeeInterface> SXBeeInterface;
@@ -26,11 +33,17 @@ public:
         CONNECTED
     };
 
-     static int xbeeATResponse( xbee_dev_t *xbee, const void FAR *raw, uint16_t length, void FAR *context);
+     static int xbeeTX( xbee_dev_t *xbee, const void FAR *raw, uint16_t length, void FAR *context);
      void forcePort(std::string port);
 
-     bool sendRemoteAT( std::string cmd, char dest[9], std::function<int(std::vector<uint8_t>)> cb = [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
+     bool sendRemoteAT( std::string cmd, const uint8_t dest[9], std::function<int(std::vector<uint8_t>)> cb = [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
      bool sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb= [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;});
+
+     std::vector<std::string> listPort() const;
+     void scanNetwork();
+
+     std::vector<XBeeRemote>& remotes() {return _remotes;}
+     const std::vector<uint8_t>& macAddress() const {return _mac;}
 
 protected:
     void run();
@@ -44,10 +57,25 @@ protected:
 private:
     xbee_dev_t _xbee;
     XBeeState _state;
+    std::vector<XBeeRemote> _remotes;
+    std::vector<uint8_t> _mac;
+
 
     int prepareXBeeATCmd(std::string cmd, std::function<int(std::vector<uint8_t>)> cb);
+    int prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, void* user_data);
+    bool tryToConnectOnPort(std::string port);
+    bool isStillConnected();
 
-    std::string _forcePort;
+    bool addRemote(std::vector<uint8_t> addr);
+    bool removeRemote(std::vector<uint8_t> addr);
+    static int handleScanResponse(std::vector<uint8_t> response);
+
+
+
+    std::string _port;
+    bool _forcePort=false;
+    int _frameStep=-1;
+    bool _scanNeeded=true;    
+
 };
-
 #endif // XBEEINTERFACE_H

@@ -51,9 +51,9 @@ JSonNode::SetError JSonNode::set(const QString& name, const QString& value)
     return setValue(name, value);
 }
 
-JSonNode::SetError JSonNode::setValue(QString , QString )
+JSonNode::SetError JSonNode::setValue(QString name, QString )
 {
-    return DoesNotExist;
+    return _jsonData.contains(name)?ReadOnly:DoesNotExist;
 }
 
 JSonNode::SetError JSonNode::setString(QString name, QString value)
@@ -76,9 +76,14 @@ JSonNode::SetError JSonNode::setNumber(QString name, QString value)
     if(!r)
         return WrongArg;
 
+    return setNumber(name, v);
+}
+
+JSonNode::SetError JSonNode::setNumber(QString name, double value)
+{
     if(_jsonData.contains(name)){
         QJsonValue jsonV = _jsonData.value(name);
-        if(jsonV.isDouble() && jsonV.toDouble() == v)
+        if(jsonV.isDouble() && jsonV.toDouble() == value)
             return SameValue;
     }
 
@@ -100,13 +105,18 @@ JSonNode::SetError JSonNode::setBool(QString name, QString value)
     if(!r)
         return WrongArg;
 
+    return setBool(name, v);
+}
+
+JSonNode::SetError JSonNode::setBool(QString name, bool value)
+{
     if(_jsonData.contains(name)){
         QJsonValue jsonV = _jsonData.value(name);
-        if(jsonV.isBool() && jsonV.toBool()==v)
+        if(jsonV.isBool() && jsonV.toBool()==value)
             return SameValue;
     }
 
-    _jsonData[name] = v;
+    _jsonData[name] = value;
     valueChanged(name);
     return NoError;
 }
@@ -171,20 +181,13 @@ QString JSonNode::address() const
 }
 
 
-
-bool JSonNode::populateNode(QJsonValueRef& data)
-{
-    QJsonObject o = data.toObject();
-    return populateNode(o);
-}
-
-bool JSonNode::populateNode(QJsonObject data)
+bool JSonNode::populateNode(const QJsonObject& data)
 {
     for(auto it = data.begin(); it!=data.end(); it++){
         QString k = it.key();
-        QJsonValueRef v = it.value();
+        QJsonValue v = it.value();
         if(v.isObject()){
-            if(!createSubNode(k, v)){
+            if(!createSubNode(k, v.toObject())){
                 if(!_jsonData.isEmpty()){
                     foreach(JSonNode* n, _subnodes)
                         delete n;
@@ -204,13 +207,13 @@ bool JSonNode::populateNode(QJsonObject data)
 
     if(_parentNode)
         _parentNode->addSubNode(this);
-    else
-        updateParentJSon();
+
+    updateParentJSon();
 
     return true;
 }
 
-bool JSonNode::createSubNode(QString, QJsonValueRef)
+bool JSonNode::createSubNode(QString , const QJsonObject &)
 {
     return false;
 }
@@ -220,13 +223,14 @@ void JSonNode::updateParentJSon()
     if(!_parentNode)
         return;
 
-    _parentNode->_jsonData.find(_name).value() = _jsonData;
+    _parentNode->_jsonData[_name] = _jsonData;
     _parentNode->updateParentJSon();
 }
 
 void JSonNode::addSubNode(JSonNode *node)
 {
     _subnodes.append(node);
+    _jsonData[node->name()] = node->_jsonData;
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
 }
 
@@ -278,6 +282,10 @@ bool JSonModel::loadFile(QString path)
 
 bool JSonModel::saveToFile(QString path)
 {
+    if(timer.isActive()){
+        timer.stop();
+        writeJSonFile();
+    }
     return QFile::copy(JSON, path);
 }
 
@@ -353,6 +361,9 @@ void JSonModel::cleanJSon()
 JSonModel::JSonModel(QString name)
     :JSonNode(name, 0)
 {
+    timer.setSingleShot(true);
+    timer.setInterval(5000);
+    connect(&timer, SIGNAL(timeout()), this, SLOT(writeJSonFile()));
 }
 
 void JSonModel::initModel()
@@ -365,5 +376,5 @@ void JSonModel::updateParentJSon()
 {
     _jsonDoc.setObject(_jsonData);
     if(!timer.isActive())
-        timer.singleShot(5000, this, SLOT(writeJSonFile()));
+        timer.start();
 }

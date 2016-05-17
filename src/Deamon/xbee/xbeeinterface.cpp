@@ -43,6 +43,19 @@ void XBeeInterface::scanNetwork()
     _scanNeeded = false;
 }
 
+XBeeRemote *XBeeInterface::remote(const uint8_t dest[])
+{
+    for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
+        for(int i=0; i<8;i++){
+            if(it->address().at(i) != dest[i])
+                break;
+            if(i==7)
+                return &(*it);
+        }
+    }
+    return 0;
+}
+
 
 /***********************************
  *        THREAD HANDLING          *
@@ -357,8 +370,23 @@ int16_t XBeeInterface::generateFrameID(int recursion) const
 
 //----------  RESPONSE  ------------
 
-int XBeeInterface::xbeeTX(xbee_dev_t *, const void *raw, uint16_t length, void *context)
+int XBeeInterface::xbeeTX(xbee_dev_t *, const void *raw, uint16_t length, void *)
 {
+    if(length<13)
+        return XBEE_ATCMD_REUSE;
+
+    const uint8_t *frame = static_cast<const uint8_t*>(raw);
+    uint8_t addr[8] = {frame[1],frame[2],frame[3],frame[4],frame[5],frame[6],frame[7],frame[8]};
+    XBeeRemote* remote = SXBeeInterface::ptr()->remote(addr);
+
+    if(!remote)
+        return XBEE_ATCMD_REUSE;
+
+    std::string data="";
+    for(int i=12;i<length;i++)
+        data += frame[i];
+
+     remote->receiveRX(data);
 
     return XBEE_ATCMD_REUSE;
 }

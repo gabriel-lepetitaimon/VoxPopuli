@@ -45,6 +45,7 @@ public:
      void scanNetwork();
 
      std::vector<XBeeRemote>& remotes() {return _remotes;}
+     XBeeRemote *remote(const uint8_t dest[9]);
      const std::vector<uint8_t>& macAddress() const {return _mac;}
 
 protected:

@@ -17,7 +17,9 @@ public:
 
     void init();
     bool sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb= [](std::vector<uint8_t>){return XBEE_ATCMD_DONE;}) const;
-    bool sendRX(std::string cmd) const;
+    bool sendTX(std::string cmd) const;
+
+    void receiveRX(std::string cmd) const;
 
     const std::vector<uint8_t>& address() const {return _addr;}
 };

@@ -2,6 +2,8 @@
 #include "xbeeinterface.h"
 #include "misc.h"
 
+#include <iostream>
+
 XBeeRemote::XBeeRemote(std::vector<uint8_t> address, XBeeInterface *interface)
     :_addr(address), _interface(interface)
 {
@@ -20,8 +22,13 @@ bool XBeeRemote::sendAT(std::string cmd, std::function<int (std::vector<uint8_t>
     return _interface->sendRemoteAT(cmd, _addr.data(), cb);
 }
 
-bool XBeeRemote::sendRX(std::string cmd) const
+bool XBeeRemote::sendTX(std::string cmd) const
 {
     return _interface->sendRemoteTX(cmd, _addr.data());
+}
+
+void XBeeRemote::receiveRX(std::string cmd) const
+{
+    std::cout<<"Receive TX: "<<cmd<<std::endl;
 }
 

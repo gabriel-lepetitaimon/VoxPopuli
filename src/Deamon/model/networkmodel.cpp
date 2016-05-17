@@ -203,7 +203,7 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
     }if(function == "sendRX"){
         if(args.size()!=1)
             return false;
-        remote()->sendRX(args.first().toStdString());
+        remote()->sendTX(args.first().toStdString());
         returnCb("");
         return true;
     }

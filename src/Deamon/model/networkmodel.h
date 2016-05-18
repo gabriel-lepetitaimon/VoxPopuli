@@ -80,6 +80,7 @@ public:
     XBeeRemote* remote();
 
 protected:
+    SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
 };

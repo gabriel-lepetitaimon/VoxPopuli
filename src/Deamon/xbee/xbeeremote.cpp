@@ -32,3 +32,18 @@ void XBeeRemote::receiveRX(std::string cmd) const
     std::cout<<"Receive TX: "<<cmd<<std::endl;
 }
 
+void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::string data)
+{
+    std::string cmd;
+    cmd += type;
+    cmd += data;
+    cmd += FRAME_END;
+    sendTX(cmd);
+}
+
+void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+{
+    std::string str = intToHexStr(data);
+    return sendMsg(type, str);
+}
+

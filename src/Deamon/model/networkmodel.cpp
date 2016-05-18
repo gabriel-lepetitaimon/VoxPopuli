@@ -179,12 +179,12 @@ QJsonObject Remote::createRemoteJSon( QString address)
     o.insert("MAC", address);
     o.insert("State", "Initializing");
     o.insert("Battery", "HIGH");
-    o.insert("BUp","false");
-    o.insert("BDown","false");
-    o.insert("BLeft","false");
-    o.insert("BRight","false");
-    o.insert("BCenter","false");
-    o.insert("LED", "0");
+    o.insert("BUp",false);
+    o.insert("BDown",false);
+    o.insert("BLeft",false);
+    o.insert("BRight",false);
+    o.insert("BCenter",false);
+    o.insert("LED", 0);
 
     return o;
 }
@@ -222,7 +222,27 @@ XBeeRemote *Remote::remote()
         if(QString::fromStdString(addr)==get("MAC").toString())
                return _remote = &SXBeeInterface::ptr()->remotes()[i];
     }
-
-    SNetworkModel::ptr()->remotes()->removeRemote(get("MAC").toString());
+    if(SNetworkModel::ptr())
+        SNetworkModel::ptr()->remotes()->removeRemote(get("MAC").toString());
     return 0;
+}
+
+JSonNode::SetError Remote::setValue(QString name, QString value)
+{
+    if(name=="LED"){
+        bool success;
+        uint8_t intensity = value.toInt(&success);
+        if(!success)
+            return WrongArg;
+        if(remote()){
+            if(intensity>0)
+                remote()->sendMsg(LED_ON);
+            else
+                remote()->sendMsg(LED_OFF);
+        }
+
+        return setNumber(name, intensity);
+    }
+
+    return JSonNode::setValue(name, value);
 }

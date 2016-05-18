@@ -7,6 +7,12 @@
 
 class XBeeInterface;
 
+enum XBEE_MSG_TYPE{
+    LED_ON = 20,
+    LED_OFF = 10,
+    FRAME_END = 255
+};
+
 class XBeeRemote
 {
 
@@ -20,6 +26,9 @@ public:
     bool sendTX(std::string cmd) const;
 
     void receiveRX(std::string cmd) const;
+
+    void sendMsg(XBEE_MSG_TYPE type, std::string data="");
+    void sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data);
 
     const std::vector<uint8_t>& address() const {return _addr;}
 };

@@ -20,8 +20,8 @@ int main(int argc, char *argv[])
     SXBeeInterface::ptr()->wait();
 
     STelnetServer::clean();
-    SXBeeInterface::clean();
     SNetworkModel::clean();
+    SXBeeInterface::clean();
 
     return r;
 }

@@ -156,14 +156,17 @@ void XBeeInterface::standardRun()
         if(!isStillConnected()){
             qWarning()<<"Disconnected";
             _state = DISCONNECTED;
-
         }
 
         if(!_frameStep){
             if(_scanNeeded)
                 scanNetwork();
-            else
+            else{
                 _scanNeeded = true;
+                for (size_t i = 0; i < _remotes.size(); ++i) {
+                    _remotes.at(i).checkStatus();
+                }
+            }
         }
 
 
@@ -199,7 +202,7 @@ void XBeeInterface::forcePort(std::string port)
 
 //----------  SEND   ---------------
 
-bool XBeeInterface::sendRemoteAT(std::string cmd, const uint8_t dest[], std::function<int(std::vector<uint8_t>)> cb)
+bool XBeeInterface::sendRemoteAT(std::string cmd, const uint8_t dest[], std::function<bool(std::vector<uint8_t>)> cb)
 {
     int c = prepareXBeeATCmd(cmd, cb);
     if(c==-1)
@@ -213,7 +216,7 @@ bool XBeeInterface::sendRemoteAT(std::string cmd, const uint8_t dest[], std::fun
 }
 
 
-bool XBeeInterface::sendAT(std::string cmd, std::function<int(std::vector<uint8_t>)> cb)
+bool XBeeInterface::sendAT(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb)
 {
     int c = prepareXBeeATCmd(cmd, cb);
     if(c==-1)
@@ -222,10 +225,10 @@ bool XBeeInterface::sendAT(std::string cmd, std::function<int(std::vector<uint8_
     return xbee_cmd_send(c)==0;
 }
 
-int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<int (std::vector<uint8_t>)> cb)
+int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb)
 {
     xbee_cmd_callback_fn cmdCb =  [](const xbee_cmd_response_t *rep) -> int {
-        if( (rep->flags&XBEE_CMD_RESP_MASK_STATUS) == XBEE_AT_RESP_ERROR){
+        if( (rep->flags&XBEE_CMD_RESP_MASK_STATUS) == XBEE_AT_RESP_ERROR || (rep->flags&XBEE_CMD_RESP_MASK_STATUS) == XBEE_AT_RESP_TX_FAIL){
             std::vector<uint8_t> addrToRemove;
             for(int i=0;i<8;i++)
                 addrToRemove.push_back(rep->source->ieee.b[i]);
@@ -233,16 +236,16 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<int (std::vec
             return XBEE_ATCMD_DONE;
         }
 
-        std::function<int(std::vector<uint8_t>)> *cb = static_cast<std::function<int(std::vector<uint8_t>)>* >(rep->context);
+        std::function<bool(std::vector<uint8_t>)> *cb = static_cast<std::function<bool(std::vector<uint8_t>)>* >(rep->context);
         std::vector<uint8_t> d;
         for(int i=0; i<rep->value_length; i++)
             d.push_back(rep->value_bytes[i]);
-        int r = (*cb)(d);
-        if(r==XBEE_ATCMD_DONE)
+        bool r = (*cb)(d);
+        if(r)
             delete cb;
-        return r;
+        return r?XBEE_ATCMD_DONE:XBEE_ATCMD_REUSE;
     };
-    return prepareXBeeATCmd(cmd, cmdCb, new std::function<int(std::vector<uint8_t>)>(cb));
+    return prepareXBeeATCmd(cmd, cmdCb, new std::function<bool(std::vector<uint8_t>)>(cb));
 }
 
 int XBeeInterface::prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, void* user_data)
@@ -275,25 +278,25 @@ bool XBeeInterface::isStillConnected()
 
 //----------  RESPONSE  ------------
 
-int XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
+bool XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
 {
     if(response.size()<10)
-        return XBEE_ATCMD_DONE;
+        return true;
     std::vector<uint8_t> addr({response[2],response[3],response[4],response[5],response[6],response[7],response[8],response[9]});
     std::vector<XBeeRemote>& remotes= SXBeeInterface::ptr()->_remotes;
 
     for (size_t i = 0; i < remotes.size(); ++i)
         if(remotes[i].address()==addr)
-            return XBEE_ATCMD_REUSE;
+            return false;
 
     SXBeeInterface::ptr()->addRemote(addr);
 
-    return XBEE_ATCMD_REUSE;
+    return false;
 }
 
 bool XBeeInterface::addRemote(std::vector<uint8_t> addr)
 {
-    for (int i = 0; i < _remotes.size(); ++i) {
+    for (size_t i = 0; i < _remotes.size(); ++i) {
         if(_remotes.at(i).address()==addr)
             return false;
     }
@@ -313,6 +316,7 @@ bool XBeeInterface::removeRemote(std::vector<uint8_t> addr)
             _remotes.erase(it);
             QMetaObject::invokeMethod(SNetworkModel::ptr()->remotes(), "removeRemote", Q_ARG(QString, QString::fromStdString(intToHexStr(addr))) );
             return true;
+            qWarning()<<"remote removed";
         }
     }
     return false;

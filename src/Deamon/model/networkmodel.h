@@ -41,8 +41,8 @@ public:
     virtual ~RemoteList(){}
     bool createSubNode(QString name, const QJsonObject& data);
 
-    //    Remote* remoteByName(QString name);
-    //    Remote* remoteByAddr(QString addr);
+    Remote* byName(QString name);
+    Remote* byAddr(QString addr);
 
 public slots:
     bool addRemote(QString address);
@@ -70,13 +70,14 @@ public:
         CENTER
     };
 
-    Remote(QString name, RemoteList* list);
-    virtual ~Remote(){}
+    Remote(QString name, QString mac, RemoteList* list);
+    virtual ~Remote();
 
     static QJsonObject createRemoteJSon(QString address);
     void setButtonState(Button b, bool pressed);
+    void setSignalStrength(int dB);
 
-
+    QString macAddress() const {return _jsonData.value("MAC").toString("");}
     XBeeRemote* remote();
 
 protected:

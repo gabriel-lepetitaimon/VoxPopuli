@@ -253,20 +253,13 @@ JSonNode::~JSonNode()
 /****************************************************
  *                  JSonModel                       *
  ****************************************************/
-
-
-JSonNode *JSonModel::nodeByAddress(QString address)
+JSonModel::JSonModel(QString name)
+    :JSonNode(name, 0)
 {
-    if(address.isEmpty())
-        return this;
-
-    QStringList path = address.split(".");
-    JSonNode* n = this;
-    for(int i=0; i<path.size(); i++){
-        if(! (n = n->nodeAt(path[i])) )
-            return 0;
-    }
-    return n;
+    timer.setSingleShot(true);
+    timer.setInterval(5000);
+    connect(&timer, SIGNAL(timeout()), this, SLOT(writeJSonFile()));
+    connect(this, SIGNAL(startTimer()), &timer, SLOT(start()));
 }
 
 JSonModel::~JSonModel(){
@@ -364,12 +357,18 @@ void JSonModel::cleanJSon()
     _jsonDoc = QJsonDocument();
 }
 
-JSonModel::JSonModel(QString name)
-    :JSonNode(name, 0)
+JSonNode *JSonModel::nodeByAddress(QString address)
 {
-    timer.setSingleShot(true);
-    timer.setInterval(5000);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(writeJSonFile()));
+    if(address.isEmpty())
+        return this;
+
+    QStringList path = address.split(".");
+    JSonNode* n = this;
+    for(int i=0; i<path.size(); i++){
+        if(! (n = n->nodeAt(path[i])) )
+            return 0;
+    }
+    return n;
 }
 
 void JSonModel::initModel()
@@ -382,5 +381,5 @@ void JSonModel::updateParentJSon()
 {
     _jsonDoc.setObject(_jsonData);
     if(!timer.isActive())
-        timer.start();
+        emit(startTimer());
 }

@@ -56,7 +56,7 @@ bool NetworkModel::execFunction(QString function, QStringList args, const std::f
     }else if(function == "listPort"){
         std::vector<std::string> ports = SXBeeInterface::ptr()->listPort();
         QString s;
-        for (int i = 0; i < ports.size(); ++i) {
+        for (size_t i = 0; i < ports.size(); ++i) {
             s += QString::fromStdString(ports.at(i));
             if(i!=ports.size()-1)
                 s+="\n";
@@ -114,7 +114,7 @@ void RemoteList::removeRemote(QString address)
 bool RemoteList::createSubNode(QString name, const QJsonObject &data)
 {
     if(data.contains("MAC")){
-        Remote* r = new Remote(name, this);
+        Remote* r = new Remote(name, data.value("MAC").toString(), this);
         if(!r->populateNode(data)){
             delete r;
             return false;
@@ -138,15 +138,39 @@ bool RemoteList::execFunction(QString function, QStringList args, const std::fun
     return false;
 }
 
+Remote *RemoteList::byName(QString name)
+{
+    for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
+        if((*it)->name()==name)
+            return (*it);
+    }
+    return 0;
+}
+
+Remote *RemoteList::byAddr(QString addr)
+{
+    for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
+        if((*it)->macAddress()==addr)
+            return (*it);
+    }
+    return 0;
+}
+
 
 /********************************************
  *              Remote                  *
  *******************************************/
 
-Remote::Remote(QString name, RemoteList *list)
+Remote::Remote(QString name, QString mac, RemoteList *list)
     :JSonNode(name, list)
 {
+    _jsonData["MAC"] = mac;
+}
 
+Remote::~Remote()
+{
+    if(remote())
+        remote()->clearRemoteModel();
 }
 
 void Remote::setButtonState(Remote::Button b, bool pressed)
@@ -173,11 +197,27 @@ void Remote::setButtonState(Remote::Button b, bool pressed)
     setBool(bName, pressed);
 }
 
+void Remote::setSignalStrength(int dB)
+{
+    QString sStrength = "Very Low";
+    if(dB > -37)
+        sStrength = "Very high";
+    else if(dB > -45)
+        sStrength = "High";
+    else if(dB > -65)
+        sStrength = "Medium";
+    else if(dB > -80)
+        sStrength = "Low";
+
+    setString("SignalStrength", sStrength);
+}
+
 QJsonObject Remote::createRemoteJSon( QString address)
 {
     QJsonObject o;
     o.insert("MAC", address);
     o.insert("State", "Initializing");
+    o.insert("SignalStrength", "NA");
     o.insert("Battery", "HIGH");
     o.insert("BUp",false);
     o.insert("BDown",false);
@@ -198,7 +238,7 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
             remote()->sendAT(args.first().toStdString(),
                                       [returnCb, args, this](std::vector<uint8_t> v)->int{
                                                     returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
-                                                    return 0;
+                                                    return true;
                                         });
         returnCb("");
         return true;
@@ -217,7 +257,7 @@ XBeeRemote *Remote::remote()
     if(_remote)
         return _remote;
 
-    for (int i = 0; i < SXBeeInterface::ptr()->remotes().size(); ++i) {
+    for (size_t i = 0; i < SXBeeInterface::ptr()->remotes().size(); ++i) {
         std::string addr = intToHexStr(SXBeeInterface::ptr()->remotes().at(i).address());
         if(QString::fromStdString(addr)==get("MAC").toString())
                return _remote = &SXBeeInterface::ptr()->remotes()[i];

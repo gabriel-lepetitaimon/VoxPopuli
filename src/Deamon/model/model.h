@@ -104,6 +104,9 @@ protected slots:
     bool parseJSonFile();
     bool writeJSonFile();
 
+signals:
+    void startTimer();
+
 private:
     void cleanJSon();
 

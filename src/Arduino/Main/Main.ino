@@ -6,18 +6,17 @@
   #define SLEEP_CMD 0xC8
   #define ACTIVE_MODE_CMD 0x96
   #define MUTE_MODE_CMD 0x64
-  #define BATT_STATUS_CMD 50
-  #define LED_ON_CMD 0x14
-  #define LED_OFF_CMD 0x0A
+  #define BATT_STATUS_CMD 0x10
+  #define LED_CMD 0x21
   
   //TX
-
-  #define NOT_PRESSED_TX '-'
+  #define BUTTON_FRAME 'B'
   #define BUTTON_LEFT_TX 'L'
   #define BUTTON_UP_TX 'U'
   #define BUTTON_RIGHT_TX 'R'
   #define BUTTON_DOWN_TX 'D' 
   #define BUTTON_ACTION_TX 'A'
+  byte buttonLabel[]= {BUTTON_LEFT_TX,BUTTON_UP_TX,BUTTON_RIGHT_TX,BUTTON_DOWN_TX,BUTTON_ACTION_TX};
   
   ////// PIN DEFINITION
 
@@ -28,8 +27,9 @@
   #define BUTTON_RIGHT 6
   #define BUTTON_DOWN 5 
   #define BUTTON_ACTION 4
+  int buttonPin[]= {BUTTON_LEFT,BUTTON_UP,BUTTON_RIGHT,BUTTON_DOWN,BUTTON_ACTION};
   
-  #define LED 13
+  #define LED 10
   
   ////// GLOBAL VARIABLES
 
@@ -56,7 +56,7 @@ void setup() {
   //Led
   
   pinMode (LED, OUTPUT);
-  digitalWrite(LED, LOW);
+  //digitalWrite(LED, LOW);
   
   //Buttons
   
@@ -79,10 +79,11 @@ void loop() {
     
     BufferRx[IbRx]= Serial.read();
     IbRx++;
-    if (BufferRx[IbRx]=FRAME_END){
+    if (BufferRx[IbRx-1]==FRAME_END){
       processMessage();
       IbRx=0;
     }
+    
   }
   
   if (Active_Mute==true){
@@ -112,12 +113,10 @@ void processMessage(){
   if (BufferRx[0]== BATT_STATUS_CMD){
     batteryStatus(); 
   }
-  if (BufferRx[0]== LED_ON_CMD){
-    toggleLED(true); 
+  if (BufferRx[0]== LED_CMD){
+    toggleLED(BufferRx[1]); 
   }
-  if (BufferRx[0]== LED_OFF_CMD){
-    toggleLED(false); 
-  }  
+  
 }
 
 
@@ -127,9 +126,6 @@ void transmitTx (){
   //while (digitalRead(PIN_ON_SLEEP)==HIGH){
     for( int i=0 ; i<IbTx ; i++){
       Serial.write(BufferTx[i]);
-    }
-    if(IbTx!=0){
-      Serial.write('\r');
     }
   //}
   IbTx=0;
@@ -173,22 +169,19 @@ void batteryStatus(){
 
   // LED MANAGEMENT --- PWM HANDLING TO MAKE ----
 
-void toggleLED(bool on_off){
-  if (on_off==true){
-    digitalWrite(LED, HIGH);
-  int length = 7;
-  byte OKLedOn[] ={'O','K','L','E','D','O','N'};
-  TxToBuffer (OKLedOn,length);  
+void toggleLED(int value){
+  int realValue=value;
+  if(value==254){
+    realValue=255;
+  }
+  analogWrite(LED, realValue);
+  int length = 5;
+  byte OKLed[] ={'O','K','L','E','D'};
+  TxToBuffer (OKLed,length);  
 }
 
-  if (on_off==false){
-    digitalWrite(LED, LOW);
-  int length = 8;
-  byte OKLedOff[] ={'O','K','L','E','D','O','F','F'};
-  TxToBuffer (OKLedOff,length);
-  }
   
-}
+
 
   // BUTTON HANDLING
 
@@ -196,54 +189,18 @@ void buttonProcess(){
 
   delay(1);
   
-  bool pressedButtonFlag = false;
-  byte buttonTx[5];
   int tempBuffer[5];
   
-  tempBuffer[0]=digitalRead(BUTTON_LEFT);
-  if (tempBuffer[0]==0){
-    buttonTx[0]=BUTTON_LEFT_TX;
-  }
-  else buttonTx[0]=NOT_PRESSED_TX;
-  
-  tempBuffer[1]=digitalRead(BUTTON_UP);
-  if (tempBuffer[1]==0){
-    buttonTx[1]=BUTTON_UP_TX;
-  }
-  else buttonTx[1]=NOT_PRESSED_TX;
-  
-  tempBuffer[2]=digitalRead(BUTTON_RIGHT);
-  if (tempBuffer[2]==0){
-    buttonTx[2]=BUTTON_RIGHT_TX;
-  }
-  else buttonTx[2]=NOT_PRESSED_TX;
-  
-  tempBuffer[3]=digitalRead(BUTTON_DOWN);
-  if (tempBuffer[3]==0){
-    buttonTx[3]=BUTTON_DOWN_TX;
-  }
-  else buttonTx[3]=NOT_PRESSED_TX;
-  
-  tempBuffer[4]=digitalRead(BUTTON_ACTION);
-  if (tempBuffer[4]==1){
-    buttonTx[4]=BUTTON_ACTION_TX;
-  }
-  else buttonTx[4]=NOT_PRESSED_TX;
-  
-  for(int i = 0 ; i<5; i++){
+  for (int i=0 ; i<5;i++){
+    
+    tempBuffer[i]=digitalRead(buttonPin[i]);
     if (tempBuffer[i]!= ButtonBuff [i]){
       ButtonBuff [i] = tempBuffer[i];
-      pressedButtonFlag = true;
+      byte buttonTx[]={BUTTON_FRAME,buttonLabel[i],ButtonBuff[i],FRAME_END};
+      TxToBuffer(buttonTx,4);
     }
   }
 
-  if (pressedButtonFlag == true){
-    TxToBuffer(buttonTx,5);  
-  }
-   
-  
 }
-
-
 
 

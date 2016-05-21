@@ -59,6 +59,7 @@ protected:
 
 private:
     xbee_dev_t _xbee;
+    int _scanCmd=-1;
     XBeeState _state;
     std::vector<XBeeRemote> _remotes;
     std::vector<uint8_t> _mac;

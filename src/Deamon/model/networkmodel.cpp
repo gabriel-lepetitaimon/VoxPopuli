@@ -49,7 +49,7 @@ bool NetworkModel::execFunction(QString function, QStringList args, const std::f
         SXBeeInterface::ptr()->sendAT(args.first().toStdString(),
                                       [returnCb, args](std::vector<uint8_t> v)->int{
                                                     returnCb("["+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
-                                                    return 0;
+                                                    return true;
                                         });
         returnCb("");
         return true;
@@ -94,8 +94,12 @@ bool RemoteList::addRemote(QString address)
     while(_jsonData.keys().contains(remoteName+QString().setNum(nbr)))
         nbr++;
     remoteName += QString().setNum(nbr);
-    emit( out(remoteName + " connected") );
-    return createSubNode(remoteName, Remote::createRemoteJSon(address));
+
+    if(createSubNode(remoteName, Remote::createRemoteJSon(address))){
+        printOut('.'+remoteName+" connected");
+        _remotes.last()->printOut();
+    }
+
 }
 
 void RemoteList::removeRemote(QString address)
@@ -103,7 +107,7 @@ void RemoteList::removeRemote(QString address)
     for (int i = 0; i < _remotes.size(); ++i) {
         if(_remotes[i]->get("MAC").toString() == address){
             _jsonData.remove(_remotes[i]->name());
-            emit( out(_remotes[i]->name() + " disconnected") );
+            printOut('.'+_remotes[i]->name()+" disconnected");
             _remotes.removeAt(i);
             updateParentJSon();
             return;
@@ -162,7 +166,7 @@ Remote *RemoteList::byAddr(QString addr)
  *******************************************/
 
 Remote::Remote(QString name, QString mac, RemoteList *list)
-    :JSonNode(name, list)
+    :JSonNode(name, list, RENAMEABLE)
 {
     _jsonData["MAC"] = mac;
 }
@@ -236,13 +240,13 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
             return false;
         if(remote())
             remote()->sendAT(args.first().toStdString(),
-                                      [returnCb, args, this](std::vector<uint8_t> v)->int{
+                                      [returnCb, args, this](std::vector<uint8_t> v)->bool{
                                                     returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
                                                     return true;
                                         });
         returnCb("");
         return true;
-    }if(function == "sendRX"){
+    }if(function == "sendTX"){
         if(args.size()!=1)
             return false;
         remote()->sendTX(args.first().toStdString());

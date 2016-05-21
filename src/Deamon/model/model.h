@@ -29,6 +29,11 @@ public:
         WrongArg
     };
 
+    enum JSonNodeFlag{
+        NO_JSON_FLAG = 0,
+        RENAMEABLE = 0x01
+    };
+
 
     const QString&      name()          const {return _name;}
     JSonNode*           nodeAt(QString name);
@@ -37,6 +42,9 @@ public:
     QString             address() const;
     QVariant get(const QString& name);
     bool getToString(const QString& name, QString &result) const;
+
+    void printOut();
+    virtual QString print() const;
 
     bool populateNode(const QJsonObject &data);
 
@@ -50,7 +58,7 @@ signals:
     void out(QString data);
 
 protected:
-    JSonNode(QString name, JSonNode *parent);
+    JSonNode(QString name, JSonNode *parent, const JSonNodeFlag& flags = NO_JSON_FLAG);
 
     virtual void updateParentJSon();
     virtual bool createSubNode(QString name, const QJsonObject& data);
@@ -65,9 +73,12 @@ protected:
     SetError setBool(QString name, bool value);
 
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){}) {return false;}
-    virtual QString print() const;
+    void printOut(QString msg);
+
+    bool rename(QString name);
 
     QString _name;
+    const JSonNodeFlag _flags;
     QJsonObject _jsonData;
     JSonNode* _parentNode;
 

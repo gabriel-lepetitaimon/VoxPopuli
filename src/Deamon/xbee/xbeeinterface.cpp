@@ -1,5 +1,7 @@
 #include "xbeeinterface.h"
 
+#define XBEE_CMD_REQUEST_TABLESIZE	3
+
 #include <string.h>
 #include <vector>
 #include <QDebug>
@@ -35,12 +37,6 @@ std::vector<std::string> XBeeInterface::listPort() const
 #endif
 
     return r;
-}
-
-void XBeeInterface::scanNetwork()
-{
-    sendAT("ND", handleScanResponse);
-    _scanNeeded = false;
 }
 
 XBeeRemote *XBeeInterface::remote(const uint8_t dest[])
@@ -83,6 +79,8 @@ void XBeeInterface::run()
         case XBeeInterface::CONNECTED:
             standardRun();
             _state = DISCONNECTED;
+            if(!_forcePort && SNetworkModel::ptr())
+                SNetworkModel::ptr()->set("USBPort", "");
             continue;
         }
         msleep(1000);
@@ -225,6 +223,15 @@ bool XBeeInterface::sendAT(std::string cmd, std::function<bool(std::vector<uint8
     return xbee_cmd_send(c)==0;
 }
 
+void XBeeInterface::scanNetwork()
+{
+    if(_scanCmd == -1)
+        _scanCmd = prepareXBeeATCmd("ND", handleScanResponse);
+
+    xbee_cmd_send( (int16_t)_scanCmd);
+    _scanNeeded = false;
+}
+
 int XBeeInterface::prepareXBeeATCmd(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb)
 {
     xbee_cmd_callback_fn cmdCb =  [](const xbee_cmd_response_t *rep) -> int {
@@ -281,7 +288,7 @@ bool XBeeInterface::isStillConnected()
 bool XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
 {
     if(response.size()<10)
-        return true;
+        return false;
     std::vector<uint8_t> addr({response[2],response[3],response[4],response[5],response[6],response[7],response[8],response[9]});
     std::vector<XBeeRemote>& remotes= SXBeeInterface::ptr()->_remotes;
 

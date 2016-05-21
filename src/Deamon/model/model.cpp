@@ -4,8 +4,8 @@
 #include <QDebug>
 
 
-JSonNode::JSonNode(QString name, JSonNode *parent)
-    : QObject(parent), _name(name), _jsonData(QJsonObject()), _parentNode(parent)
+JSonNode::JSonNode(QString name, JSonNode *parent, const JSonNodeFlag& flags )
+    : QObject(parent), _name(name), _flags(flags), _jsonData(QJsonObject()), _parentNode(parent)
 {
 
 }
@@ -123,7 +123,7 @@ JSonNode::SetError JSonNode::setBool(QString name, bool value)
 
 QString JSonNode::print() const
 {
-    QString r = "\n{\n";
+    QString r = "{\n";
     foreach(QString name, _jsonData.keys()){
         QString d;
         if(getToString(name,d)){
@@ -135,6 +135,39 @@ QString JSonNode::print() const
     return r;
 }
 
+void JSonNode::printOut(QString msg)
+{
+    QString addr = address();
+    if(msg.startsWith('.')){
+        if(addr.isEmpty())
+            msg.remove(0,1);
+    }else if(!msg.startsWith(' '))
+        msg.prepend(" ");
+
+    emit out(addr+msg);
+}
+
+bool JSonNode::rename(QString name)
+{
+    if(!_parentNode)
+        return false;
+
+    if(_parentNode->_jsonData.contains(name))
+        return false;
+
+    _parentNode->_jsonData.remove(_name);
+    _name = name;
+    updateParentJSon();
+
+    printOut("renamed \""+name+"\"");
+
+    return true;
+}
+
+void JSonNode::printOut(){
+    printOut(print());
+}
+
 void JSonNode::valueChanged(QString name)
 {
     updateParentJSon();
@@ -142,7 +175,7 @@ void JSonNode::valueChanged(QString name)
     if(!addr.isEmpty()) addr+".";
     QString d;
     getToString(name, d);
-    emit out(addr+(addr.isEmpty()?"":".")+name+": "+d);
+    printOut("."+name+": "+d);
 }
 
 bool JSonNode::call(const QString &functionName, const QStringList &arg, const std::function<void(QString)>& returnCb){
@@ -151,6 +184,10 @@ bool JSonNode::call(const QString &functionName, const QStringList &arg, const s
 
     if(functionName == "print"){
         returnCb(print());
+        return true;
+    }else if(functionName == "rename" && (_flags&RENAMEABLE) && arg.size()==1){
+        rename(arg.at(0));
+        returnCb("");
         return true;
     }
     return false;
@@ -303,7 +340,8 @@ bool JSonModel::initFile()
     if(!QFile(JSON).exists()){
         if(_watch.files().size())
             _watch.removePath(JSON);
-        bool r = QFile::copy(":/JSON/"+_name+".json", JSON);
+        if(!QFile::copy(":/JSON/"+_name+".json", JSON))
+            return false;
         _watch.addPath(JSON);
     }
     return parseJSonFile();

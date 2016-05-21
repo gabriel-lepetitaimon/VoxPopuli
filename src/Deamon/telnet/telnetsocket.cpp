@@ -1,6 +1,7 @@
 #include "telnetsocket.h"
 #include "telnetserver.h"
 #include "../model/networkmodel.h"
+#include "../model/eventmodel.h"
 
 #include <QCoreApplication>
 #include <QMetaMethod>
@@ -18,6 +19,8 @@ void TelnetSocket::msgReveived(const QByteArray& msg)
         switchMode(Network);
     else if(cmd=="#1")
         switchMode(Patch);
+    else if(cmd=="#2")
+        switchMode(EventsProcessor);
     else if(cmd=="#2")
         switchMode(Application);
     else if(cmd=="#v")
@@ -52,7 +55,7 @@ void TelnetSocket::dispatchCmd(QString cmd)
     if(cmd.contains('(')){
         QString function = cmd.left(cmd.indexOf('('));
         cmd = cmd.left(cmd.indexOf(')'));
-        QStringList args = splitArgs(cmd.mid(cmd.indexOf('(')+1));
+        QStringList args = splitArgs(cmd.mid(cmd.indexOf('(')+1), true);
         std::function<void(QString)> cb = [this](QString r){
                     QMetaObject::invokeMethod(this, "send", Q_ARG(QString, r), Q_ARG(bool, true));
         };
@@ -109,6 +112,8 @@ JSonModel *TelnetSocket::model()
         return SNetworkModel::ptr();
     case TelnetSocket::Patch:
         return 0;
+    case TelnetSocket::EventsProcessor:
+        return SEventModel::ptr();
     case TelnetSocket::Application:
         return 0;
     }
@@ -132,6 +137,9 @@ void TelnetSocket::switchMode(TelnetSocket::TelnetMode m)
         break;
     case TelnetSocket::Patch:
         send("#1: Patch");
+        break;
+    case TelnetSocket::EventsProcessor:
+        send("#2: Event Processor");
         break;
     case TelnetSocket::Application:
         send("#2: Application");

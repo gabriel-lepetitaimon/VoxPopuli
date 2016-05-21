@@ -26,6 +26,7 @@ public:
         Basic,
         Network,
         Patch,
+        EventsProcessor,
         Application
     };
 

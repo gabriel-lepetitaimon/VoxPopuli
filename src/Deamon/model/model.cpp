@@ -179,8 +179,10 @@ void JSonNode::valueChanged(QString name)
 }
 
 bool JSonNode::call(const QString &functionName, const QStringList &arg, const std::function<void(QString)>& returnCb){
-    if(execFunction(functionName, arg, returnCb))
+    if(execFunction(functionName, arg, returnCb)){
+        returnCb("");
         return true;
+    }
 
     if(functionName == "print"){
         returnCb(print());
@@ -272,10 +274,18 @@ void JSonNode::addSubNode(JSonNode *node)
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
 }
 
+void JSonNode::removeSubNode(JSonNode *node)
+{
+    printOut('.'+node->name()+" removed");
+    _jsonData.remove(node->name());
+    _subnodes.removeOne(node);
+    node->deleteLater();
+}
+
 void JSonNode::clearJsonData()
 {
     foreach(JSonNode* n, _subnodes)
-        delete n;
+        n->deleteLater();
     _subnodes.clear();
     _jsonData = QJsonObject();
 }

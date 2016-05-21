@@ -96,7 +96,7 @@ bool RemoteList::addRemote(QString address)
     remoteName += QString().setNum(nbr);
 
     if(createSubNode(remoteName, Remote::createRemoteJSon(address))){
-        printOut('.'+remoteName+" connected");
+        printOut('.'+remoteName+" added");
         _remotes.last()->printOut();
     }
 
@@ -106,10 +106,8 @@ void RemoteList::removeRemote(QString address)
 {
     for (int i = 0; i < _remotes.size(); ++i) {
         if(_remotes[i]->get("MAC").toString() == address){
-            _jsonData.remove(_remotes[i]->name());
-            printOut('.'+_remotes[i]->name()+" disconnected");
+            removeSubNode(_remotes.at(i));
             _remotes.removeAt(i);
-            updateParentJSon();
             return;
         }
     }

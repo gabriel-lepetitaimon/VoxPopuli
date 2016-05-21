@@ -63,6 +63,7 @@ protected:
     virtual void updateParentJSon();
     virtual bool createSubNode(QString name, const QJsonObject& data);
     void addSubNode(JSonNode* node);
+    void removeSubNode(JSonNode* node);
     void clearJsonData();
 
     virtual SetError setValue(QString name, QString value);

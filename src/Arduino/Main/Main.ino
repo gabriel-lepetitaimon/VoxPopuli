@@ -10,6 +10,7 @@
   #define LED_CMD 0x21
   
   //TX
+  
   #define BUTTON_FRAME 'B'
   #define BUTTON_LEFT_TX 'L'
   #define BUTTON_UP_TX 'U'
@@ -17,6 +18,8 @@
   #define BUTTON_DOWN_TX 'D' 
   #define BUTTON_ACTION_TX 'A'
   byte buttonLabel[]= {BUTTON_LEFT_TX,BUTTON_UP_TX,BUTTON_RIGHT_TX,BUTTON_DOWN_TX,BUTTON_ACTION_TX};
+
+  #define BATT_STATUS_TX 'S'
   
   ////// PIN DEFINITION
 
@@ -30,12 +33,14 @@
   int buttonPin[]= {BUTTON_LEFT,BUTTON_UP,BUTTON_RIGHT,BUTTON_DOWN,BUTTON_ACTION};
   
   #define LED 10
+
+  #define ADC_PIN A0
   
   ////// GLOBAL VARIABLES
 
   //FLAGS AND COUNTERS
   
-  bool SkipProcessFlag = false;
+  bool skipProcessFlag = false;
   bool Active_Mute = false;
   int IbRx=0;
   int IbTx=0;
@@ -46,6 +51,10 @@
   int BufferTx[20];
   int ButtonBuff[] = {1,1,1,1,0};
 
+      
+  
+  //// SETUP
+
 void setup() {
 
   //Serial operations
@@ -53,10 +62,12 @@ void setup() {
   
   ///////Pin modes
 
+  pinMode (PIN_ON_SLEEP, INPUT);
+
   //Led
   
   pinMode (LED, OUTPUT);
-  //digitalWrite(LED, LOW);
+  
   
   //Buttons
   
@@ -75,6 +86,7 @@ void setup() {
 
 void loop() {
   
+  skipProcessFlag==false;
   while(Serial.available() > 0) {
     
     BufferRx[IbRx]= Serial.read();
@@ -85,12 +97,16 @@ void loop() {
     }
     
   }
-  
-  if (Active_Mute==true){
-    buttonProcess();
+  if (skipProcessFlag==false){
+    
+    if (Active_Mute==true){
+      buttonProcess();
+    }
+    if (digitalRead(PIN_ON_SLEEP)==1){
+      transmitTx();
+    }
+      
   }
-  
-  transmitTx();
 }
 
 
@@ -120,14 +136,13 @@ void processMessage(){
 }
 
 
-  // TRANSMISSION STUFF  --- PIN ON SLEEP TO MAKE
+  // TRANSMISSION STUFF  --- PIN ON SLEEP HANDLED IN MAIN LOOP
 
 void transmitTx (){
-  //while (digitalRead(PIN_ON_SLEEP)==HIGH){
     for( int i=0 ; i<IbTx ; i++){
       Serial.write(BufferTx[i]);
     }
-  //}
+  
   IbTx=0;
 }
 
@@ -142,12 +157,10 @@ void TxToBuffer ( byte msg[], int length){
 
 void setActiveMode(){
   Active_Mute =true;
-  SkipProcessFlag = false;
 }
 
 void setMuteMode(){
-  Active_Mute = false;
-  SkipProcessFlag = false;  
+  Active_Mute = false; 
 }
 
   // SLEEPMODE ---- WORK IN PROGRESS DON'T USE ----
@@ -161,13 +174,23 @@ void setSleepMode(int time){
   
 }
 
-  // BATTERYSTATUS ---- NOT IMPLEMENTED YET ----
+  // BATTERYSTATUS ---- ADC on 10 bit FIX to make ---
 
 void batteryStatus(){
   
+  int sensorValue;
+  sensorValue = analogRead(ADC_PIN);
+  sensorValue=sensorValue/(1023)*(255);
+  if (sensorValue==255){
+    sensorValue=254;
+  }
+  
+  byte battStatusTx[]={BATT_STATUS_TX,sensorValue,FRAME_END};
+  TxToBuffer(battStatusTx,3);
+
 }
 
-  // LED MANAGEMENT --- PWM HANDLING TO MAKE ----
+  // LED MANAGEMENT
 
 void toggleLED(int value){
   int realValue=value;

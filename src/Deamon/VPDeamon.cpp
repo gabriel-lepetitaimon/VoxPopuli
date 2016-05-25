@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
 
     STelnetServer::clean();
     SNetworkModel::clean();
-    SEventModel::init();
+    SEventModel::clean();
     SXBeeInterface::clean();
 
     return r;

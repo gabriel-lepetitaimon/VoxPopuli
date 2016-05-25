@@ -1,6 +1,6 @@
 #include "model.h"
 #include <QDir>
-
+#include <QJsonArray>
 #include <QDebug>
 
 
@@ -121,6 +121,16 @@ JSonNode::SetError JSonNode::setBool(QString name, bool value)
     return NoError;
 }
 
+JSonNode::SetError JSonNode::parseArray(QString name, QStringList )
+{
+    return _jsonData.contains(name)?ReadOnly:DoesNotExist;
+}
+
+bool JSonNode::execFunction(QString , QStringList , const std::function<void (QString)> &)
+{
+    return false;
+}
+
 QString JSonNode::print() const
 {
     QString r = "{\n";
@@ -235,6 +245,20 @@ bool JSonNode::populateNode(const QJsonObject& data)
                 }
                 return false;
             }
+        }else if(v.isArray()){
+            QJsonArray array = v.toArray();
+            QStringList r;
+            for(int i=0; i<array.size(); i++){
+                QJsonValue itV = array.at(i);
+                if(itV.isString())
+                    r+= itV.toString();
+                else if(itV.isBool())
+                    r+= itV.toBool()?"true":"false";
+                else if(itV.isDouble())
+                    r+= QString().setNum(v.toDouble());
+            }
+            parseArray(k, r);
+
         }else if(v.isBool())
             setValue(k, v.toBool()?"true":"false");
         else if(v.isString())

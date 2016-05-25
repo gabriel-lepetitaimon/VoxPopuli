@@ -25,7 +25,6 @@ public:
     enum TelnetMode{
         Basic,
         Network,
-        Patch,
         EventsProcessor,
         Application
     };

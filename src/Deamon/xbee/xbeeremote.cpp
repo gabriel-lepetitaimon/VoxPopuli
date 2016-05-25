@@ -28,35 +28,74 @@ bool XBeeRemote::sendTX(std::string cmd) const
     return _interface->sendRemoteTX(cmd, _addr.data());
 }
 
-void XBeeRemote::receiveRX(std::string cmd) const
+void XBeeRemote::receiveRX(std::string cmd)
 {
-    std::cout<<"Receive TX: "<<cmd<<std::endl;
+    cmd = rxBuffer + cmd;
+    std::string buf;
+    std::vector<std::string> msgs;
+    for (size_t i = 0; i < cmd.size(); ++i) {
+
+        if((uint8_t)cmd[i] == FRAME_END){
+            if(buf=="")
+                continue;
+            msgs.push_back(buf);
+            buf = "";
+        }else
+            buf+=cmd[i];
+    }
+    rxBuffer = buf;
+    for(size_t i=0; i<msgs.size(); i++)
+        handleMessage(msgs[i]);
+}
+
+void XBeeRemote::handleMessage(std::string cmd)
+{
+    switch((uint8_t)cmd[0]){
+    case BUTTON_LEFT:
+        remoteModel()->setButtonState(Remote::LEFT, cmd[1]);
+        break;
+    case BUTTON_RIGHT:
+        remoteModel()->setButtonState(Remote::RIGHT, cmd[1]);
+        break;
+    case BUTTON_UP:
+        remoteModel()->setButtonState(Remote::TOP, cmd[1]);
+        break;
+    case BUTTON_DOWN:
+        remoteModel()->setButtonState(Remote::BOTTOM, cmd[1]);
+        break;
+    case BUTTON_ACTION:
+            remoteModel()->setButtonState(Remote::CENTER, cmd[1]);
+            break;
+    default:
+        return;
+    }
 }
 
 void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::string data)
 {
-    std::string cmd;
-    cmd += type;
-    cmd += data;
-    cmd += FRAME_END;
-    sendTX(cmd);
+    std::vector<uint8_t> hex = hexStrToInt(data);
+    sendMsg(type, hex);
 }
 
 void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
 {
-    std::string str = intToHexStr(data);
-    return sendMsg(type, str);
+    std::string cmd;
+    cmd+=type;
+    for(size_t i=0; i<data.size(); i++)
+        cmd+=data[i];
+    cmd += FRAME_END;
+    sendTX(cmd);
 }
 
 void XBeeRemote::checkStatus()
 {
-    sendAT("DB",
-           [this](std::vector<uint8_t> d){
-                if(!d.empty())
-                    remoteModel()->setSignalStrength(-d.at(0));
-                return true;
-            }
-    );
+//    sendAT("DB",
+//           [this](std::vector<uint8_t> d){
+//                if(!d.empty())
+//                    remoteModel()->setSignalStrength(-d.at(0));
+//                return true;
+//            }
+//    );
 }
 
 Remote *XBeeRemote::remoteModel()

@@ -100,6 +100,8 @@ bool RemoteList::addRemote(QString address)
         _remotes.last()->printOut();
     }
 
+    return true;
+
 }
 
 void RemoteList::removeRemote(QString address)
@@ -127,7 +129,7 @@ bool RemoteList::createSubNode(QString name, const QJsonObject &data)
     return false;
 }
 
-bool RemoteList::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
+bool RemoteList::execFunction(QString function, QStringList , const std::function<void (QString)> &returnCb)
 {
     if(function == "list"){
         QString strList;
@@ -242,13 +244,20 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
                                                     returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
                                                     return true;
                                         });
-        returnCb("");
         return true;
-    }if(function == "sendTX"){
+    }else if(function == "sendTX"){
         if(args.size()!=1)
             return false;
         remote()->sendTX(args.first().toStdString());
-        returnCb("");
+        return true;
+    }else if(function == "sendTXHex"){
+        if(args.size()!=1)
+            return false;
+        std::string data;
+        std::vector<uint8_t> hex = hexStrToInt(args.first().toStdString());
+        for(size_t i=0; i<hex.size(); i++)
+            data+=hex[i];
+        remote()->sendTX(data);
         return true;
     }
     return false;
@@ -276,14 +285,20 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
         uint8_t intensity = value.toInt(&success);
         if(!success)
             return WrongArg;
-        if(remote()){
-            if(intensity>0)
-                remote()->sendMsg(LED_ON);
-            else
-                remote()->sendMsg(LED_OFF);
-        }
+        if(remote())
+            remote()->sendMsg(LED_INTENSITY, std::vector<uint8_t>({intensity}));
 
         return setNumber(name, intensity);
+    }else if(name=="State"){
+        if(remote()){
+        if(value=="active")
+            remote()->sendMsg(ACTIVE_MODE);
+        else if(value == "mute")
+            remote()->sendMsg(MUTE_MODE);
+        else
+            return JSonNode::setValue(name, value);
+        }
+        return JSonNode::setString(name, value);
     }
 
     return JSonNode::setValue(name, value);

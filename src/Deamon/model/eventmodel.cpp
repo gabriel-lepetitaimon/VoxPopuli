@@ -20,7 +20,8 @@ bool EventModel::createSubNode(QString name, const QJsonObject &data)
             return false;
         }
         return true;
-    }else if(name == "VirtualNet"){
+    }
+    else if(name == "VirtualNet"){
         _virtualNet = new VirtualNetwork(this);
         if(!_virtualNet->populateNode(data)){
             delete _virtualNet;
@@ -173,9 +174,11 @@ bool MidiInterface::removePort(QString portName)
 MidiPort::MidiPort(QString name, bool inPort, MidiInterface *interface)
     :JSonNode(name, interface, RENAMEABLE), _in(inPort)
 {
-    if(_in)
-        _port = MidiInterface::RtIn();
-    else
+    if(_in){
+        RtMidiIn* in = MidiInterface::RtIn();
+        in->setCallback(MidiPort::midiCallback, this);
+        _port = in;
+    }else
         _port = MidiInterface::RtOut();
 }
 
@@ -220,9 +223,10 @@ JSonNode::SetError MidiPort::setValue(QString name, QString value)
         if(!isNumber)
             portID = portsName().indexOf(value);
 
-        if(portID != -1)
-            openPort(portID);
-        else
+        if(portID != -1){
+            if(!openPort(portID))
+                return setString(name, "");
+        }else
             _port->openVirtualPort(value.toStdString());
 
         if(isNumber)
@@ -257,6 +261,11 @@ bool MidiPort::execFunction(QString function, QStringList args, const std::funct
     return false;
 }
 
+void MidiPort::midiCallback(double , std::vector<unsigned char> *message, void *userData)
+{
+    MidiPort* port = static_cast<MidiPort*>(userData);
+}
+
 QStringList MidiPort::portsName() const
 {
     QStringList r;
@@ -265,7 +274,11 @@ QStringList MidiPort::portsName() const
         return r;
 }
 
-void MidiPort::openPort(unsigned int portNumber)
+bool MidiPort::openPort(unsigned int portNumber)
 {
+    if(_port->getPortCount()<=portNumber)
+        return false;
+
     _port->openPort(portNumber, "VoxPopuli");
+    return true;
 }

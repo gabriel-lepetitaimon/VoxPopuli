@@ -72,8 +72,9 @@ protected:
     SetError setNumber(QString name, double value);
     SetError setBool(QString name, QString value);
     SetError setBool(QString name, bool value);
+    virtual SetError parseArray(QString name, QStringList value);
 
-    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){}) {return false;}
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){});
     void printOut(QString msg);
 
     bool rename(QString name);

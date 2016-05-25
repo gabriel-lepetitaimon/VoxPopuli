@@ -18,8 +18,6 @@ void TelnetSocket::msgReveived(const QByteArray& msg)
     else if(cmd=="#0")
         switchMode(Network);
     else if(cmd=="#1")
-        switchMode(Patch);
-    else if(cmd=="#2")
         switchMode(EventsProcessor);
     else if(cmd=="#2")
         switchMode(Application);
@@ -110,8 +108,6 @@ JSonModel *TelnetSocket::model()
        return 0;
     case TelnetSocket::Network:
         return SNetworkModel::ptr();
-    case TelnetSocket::Patch:
-        return 0;
     case TelnetSocket::EventsProcessor:
         return SEventModel::ptr();
     case TelnetSocket::Application:
@@ -135,11 +131,8 @@ void TelnetSocket::switchMode(TelnetSocket::TelnetMode m)
     case TelnetSocket::Network:
         send("#0: Network");
         break;
-    case TelnetSocket::Patch:
-        send("#1: Patch");
-        break;
     case TelnetSocket::EventsProcessor:
-        send("#2: Event Processor");
+        send("#1: Event Processor");
         break;
     case TelnetSocket::Application:
         send("#2: Application");

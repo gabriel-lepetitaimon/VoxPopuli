@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/JSON">
         <file alias="network.json">model/network.json</file>
+        <file alias="eventsProcessor.json">model/events.json</file>
     </qresource>
 </RCC>

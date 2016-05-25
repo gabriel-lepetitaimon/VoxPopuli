@@ -53,6 +53,7 @@ protected:
     QList<MidiPort*> _ports;
 };
 
+
 class MidiPort: public JSonNode
 {
     Q_OBJECT
@@ -73,8 +74,10 @@ protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
+    static void midiCallback(double timeSptamp, std::vector<unsigned char> *message, void *userData);
+
     QStringList portsName() const;
-    void openPort(unsigned int portNumber);
+    bool openPort(unsigned int portNumber);
 };
 
 

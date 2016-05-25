@@ -1,6 +1,5 @@
-#include "xbeeinterface.h"
-
 #define XBEE_CMD_REQUEST_TABLESIZE	3
+#include "xbeeinterface.h"
 
 #include <string.h>
 #include <vector>
@@ -160,7 +159,7 @@ void XBeeInterface::standardRun()
             if(_scanNeeded)
                 scanNetwork();
             else{
-                _scanNeeded = true;
+                //_scanNeeded = true;
                 for (size_t i = 0; i < _remotes.size(); ++i) {
                     _remotes.at(i).checkStatus();
                 }
@@ -292,6 +291,9 @@ bool XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
     std::vector<uint8_t> addr({response[2],response[3],response[4],response[5],response[6],response[7],response[8],response[9]});
     std::vector<XBeeRemote>& remotes= SXBeeInterface::ptr()->_remotes;
 
+    if(addr == SXBeeInterface::ptr()->_mac)
+        return false;
+
     for (size_t i = 0; i < remotes.size(); ++i)
         if(remotes[i].address()==addr)
             return false;
@@ -322,8 +324,8 @@ bool XBeeInterface::removeRemote(std::vector<uint8_t> addr)
         if(it->address()==addr){
             _remotes.erase(it);
             QMetaObject::invokeMethod(SNetworkModel::ptr()->remotes(), "removeRemote", Q_ARG(QString, QString::fromStdString(intToHexStr(addr))) );
-            return true;
             qWarning()<<"remote removed";
+            return true;
         }
     }
     return false;

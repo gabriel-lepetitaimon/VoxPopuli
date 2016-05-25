@@ -44,6 +44,8 @@ public:
     Remote* byName(QString name);
     Remote* byAddr(QString addr);
 
+    QList<Remotes*>& remotes() {return _remotes;}
+
 public slots:
     bool addRemote(QString address);
     void removeRemote(QString address);
@@ -63,11 +65,11 @@ class Remote: public JSonNode
 public:
 
     enum Button{
-        TOP,
-        BOTTOM,
-        RIGHT,
-        LEFT,
-        CENTER
+        UP=0,
+        DOWN=1,
+        RIGHT=2,
+        LEFT=3,
+        ACTION=4
     };
 
     Remote(QString name, QString mac, RemoteList* list);

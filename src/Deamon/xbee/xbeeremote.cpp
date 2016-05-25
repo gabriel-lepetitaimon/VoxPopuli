@@ -58,13 +58,13 @@ void XBeeRemote::handleMessage(std::string cmd)
         remoteModel()->setButtonState(Remote::RIGHT, cmd[1]);
         break;
     case BUTTON_UP:
-        remoteModel()->setButtonState(Remote::TOP, cmd[1]);
+        remoteModel()->setButtonState(Remote::UP, cmd[1]);
         break;
     case BUTTON_DOWN:
-        remoteModel()->setButtonState(Remote::BOTTOM, cmd[1]);
+        remoteModel()->setButtonState(Remote::DOWN, cmd[1]);
         break;
     case BUTTON_ACTION:
-            remoteModel()->setButtonState(Remote::CENTER, cmd[1]);
+            remoteModel()->setButtonState(Remote::ACTION, cmd[1]);
             break;
     default:
         return;

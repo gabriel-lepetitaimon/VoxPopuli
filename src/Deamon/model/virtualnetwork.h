@@ -17,10 +17,12 @@ public:
     virtual ~VirtualNetwork() {}
     bool createSubNode(QString name, const QJsonObject& data);
 
-    VirtualRemote* addRemote(QString name);
+    bool addRemote(QString name="");
+    VirtualRemote* remoteByName(QString name);
     bool removeRemote(QString name);
 
-    Group* addGroup(QString name);
+    bool addGroup(QString name=0);
+    Group* groupByName(QString name);
     bool removeGroup(QString name);
 
     void autoGenerateRemote();
@@ -45,8 +47,9 @@ class VirtualRemote: public JSonNode
 public:
     VirtualRemote(QString name, VirtualNetwork* virtualNet);
     virtual ~VirtualRemote();
+    bool createSubNode(QString name, const QJsonObject& data);
 
-    VirtualNetwork* virtualNet();
+    VirtualNetwork* virtualNet() {return _vNet;}
     static QJsonObject createVirtualRemoteJSon();
 protected:
     SetError setValue(QString name, QString value);

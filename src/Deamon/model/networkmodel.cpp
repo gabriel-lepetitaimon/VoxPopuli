@@ -101,7 +101,6 @@ bool RemoteList::addRemote(QString address)
     }
 
     return true;
-
 }
 
 void RemoteList::removeRemote(QString address)
@@ -181,10 +180,10 @@ void Remote::setButtonState(Remote::Button b, bool pressed)
 {
     QString bName;
     switch(b){
-    case Remote::TOP:
+    case Remote::UP:
         bName = "BUp";
         break;
-    case Remote::BOTTOM:
+    case Remote::DOWN:
         bName = "BDown";
         break;
     case Remote::RIGHT:
@@ -193,7 +192,7 @@ void Remote::setButtonState(Remote::Button b, bool pressed)
     case Remote::LEFT:
         bName = "BLeft";
         break;
-    case Remote::CENTER:
+    case Remote::ACTION:
         bName = "BCenter";
         break;
     }

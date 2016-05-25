@@ -108,7 +108,7 @@ bool VirtualNetwork::removeGroup(QString name)
     if(!g)
         return false;
 
-    _vGroups.removeFirst(g);
+    _vGroups.removeOne(g);
     removeSubNode(g);
     return true;
 }
@@ -232,14 +232,59 @@ JSonNode::SetError VirtualRemote::setValue(QString name, QString value)
             return JSonNode::SameValue;
         if(value=="ON")
             _eventsHandler[Remote::UP]->triggerEvent("up");
-        else
+        else if(value=="OFF")
             _eventsHandler[Remote::UP]->triggerEvent("down");
+        else
+            return WrongArg;
+        return setString(name, value);
+    }else if(name=="Down"){
+        if(_jsonData.value("Down").toString()==value)
+            return JSonNode::SameValue;
+        if(value=="ON")
+            _eventsHandler[Remote::DOWN]->triggerEvent("up");
+        else if(value=="OFF")
+            _eventsHandler[Remote::DOWN]->triggerEvent("down");
+        else
+            return WrongArg;
+        return setString(name, value);
+    }else if(name=="Left"){
+        if(_jsonData.value("Left").toString()==value)
+            return JSonNode::SameValue;
+        if(value=="ON")
+            _eventsHandler[Remote::LEFT]->triggerEvent("up");
+        else if(value=="OFF")
+            _eventsHandler[Remote::LEFT]->triggerEvent("down");
+        else
+            return WrongArg;
+        return setString(name, value);
+    }else if(name=="Right"){
+        if(_jsonData.value("Right").toString()==value)
+            return JSonNode::SameValue;
+        if(value=="ON")
+            _eventsHandler[Remote::RIGHT]->triggerEvent("up");
+        else if(value=="OFF")
+            _eventsHandler[Remote::RIGHT]->triggerEvent("down");
+        else
+            return WrongArg;
+        return setString(name, value);
+    }else if(name=="Action"){
+        if(_jsonData.value("Up").toString()==value)
+            return JSonNode::SameValue;
+        if(value=="ON")
+            _eventsHandler[Remote::UP]->triggerEvent("up");
+        else if(value=="OFF")
+            _eventsHandler[Remote::UP]->triggerEvent("down");
+        else
+            return WrongArg;
+        return setString(name, value);
     }
+
+    return JSonNode::setValue(name, value);
 }
 
 bool VirtualRemote::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
 {
-
+    return false;
 }
 
 /********************************************

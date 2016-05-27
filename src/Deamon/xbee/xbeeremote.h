@@ -2,6 +2,7 @@
 #define XBEEREMOTE_H
 
 #include <functional>
+#include <map>
 #include <vector>
 #include "xbee/atcmd.h"
 
@@ -27,6 +28,7 @@ class XBeeRemote
     XBeeInterface* _interface;
     Remote* _remoteModel = 0;
     std::string rxBuffer;
+    std::map<std::string, std::string> _safeSendMap;
 public:
     XBeeRemote(std::vector<uint8_t> address, XBeeInterface* interface);
 
@@ -38,15 +40,22 @@ public:
     void receiveRX(std::string cmd);
     void handleMessage(std::string cmd);
 
-    void sendMsg(XBEE_MSG_TYPE type, std::string data="");
-    void sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data);
+    void sendMsg(XBEE_MSG_TYPE type, std::string data);
+    void sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data = std::vector<uint8_t>());
+
+    void safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::string data);
+    void safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::vector<uint8_t> data = std::vector<uint8_t>());
 
     void checkStatus();
+    bool tick();
 
     const std::vector<uint8_t>& address() const {return _addr;}
     Remote* remoteModel();
 
     void clearRemoteModel(){_remoteModel = 0;}
+
+protected:
+    std::string prepareMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data);
 };
 
 #endif // XBEEREMOTE_H

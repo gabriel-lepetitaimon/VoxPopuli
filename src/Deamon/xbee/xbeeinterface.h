@@ -63,6 +63,7 @@ private:
     XBeeState _state;
     std::vector<XBeeRemote> _remotes;
     std::vector<uint8_t> _mac;
+    bool _fastCycle = false;
 
 
     int prepareXBeeATCmd(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb);

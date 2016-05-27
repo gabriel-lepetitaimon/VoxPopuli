@@ -285,15 +285,15 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
         if(!success)
             return WrongArg;
         if(remote())
-            remote()->sendMsg(LED_INTENSITY, std::vector<uint8_t>({intensity}));
+            remote()->safeSendMsg("L",LED_INTENSITY, std::vector<uint8_t>({intensity}));
 
         return setNumber(name, intensity);
     }else if(name=="State"){
         if(remote()){
         if(value=="active")
-            remote()->sendMsg(ACTIVE_MODE);
+            remote()->safeSendMsg("S", ACTIVE_MODE);
         else if(value == "mute")
-            remote()->sendMsg(MUTE_MODE);
+            remote()->safeSendMsg("S", MUTE_MODE);
         else
             return JSonNode::setValue(name, value);
         }

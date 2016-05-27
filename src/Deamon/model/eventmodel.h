@@ -4,6 +4,7 @@
 #include <QObject>
 #include <RtMidi.h>
 
+#include "eventtrigger.h"
 #include "model.h"
 #include "singleton.h"
 
@@ -40,6 +41,7 @@ public:
     bool createSubNode(QString name, const QJsonObject& data);
 
     MidiPort* portByName(bool inPort, QString portName);
+    const QList<MidiPort*>& ports() const {return _ports;}
 
     bool addPort(QString portName, bool inPort, QString port = "");
     bool removePort(QString portName);

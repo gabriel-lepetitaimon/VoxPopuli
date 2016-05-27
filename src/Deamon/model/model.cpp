@@ -30,6 +30,9 @@ bool JSonNode::getToString(const QString &name, QString &result) const
     QVariant v = o.toVariant();
     if(!v.isValid() || v.isNull())
         return false;
+
+    QList<QVariant> l;
+
     switch(v.type()){
     case QVariant::Bool:
         result = v.toBool()?"true":"false";
@@ -39,6 +42,21 @@ bool JSonNode::getToString(const QString &name, QString &result) const
         break;
     case QVariant::String:
         result = '"'+v.toString()+'"';
+        break;
+    case QVariant::List:
+         l = v.toList();
+        result = '[';
+        foreach(QVariant var, l){
+            if(var.type() == QVariant::Bool)
+                result += var.toBool()?"true":"false";
+            else if(var.type() == QVariant::Double)
+                result += QString().setNum(var.toDouble());
+            else if(var.type() == QVariant::Bool)
+                result += '"'+var.toString()+'"';
+            result+=", ";
+        }
+        result.remove(result.size()-2, 2);
+        result+=']';
         break;
     default:
         return false;

@@ -44,7 +44,7 @@ public:
     Remote* byName(QString name);
     Remote* byAddr(QString addr);
 
-    QList<Remotes*>& remotes() {return _remotes;}
+    QList<Remote*>& remotes() {return _remotes;}
 
 public slots:
     bool addRemote(QString address);

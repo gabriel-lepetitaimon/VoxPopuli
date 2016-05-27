@@ -103,3 +103,30 @@ vector<uint8_t> hexStrToInt(string str){
 
     return r;
 }
+
+/********************************************
+ *                 Hex Data                 *
+ *******************************************/
+
+
+HexData::HexData(string data)
+    :_data(data.size())
+{
+    for(size_t i=0; i<data.size(); i++)
+        _data[i] = (uint8_t)data.at(i);
+}
+
+HexData::HexData(std::vector<uint8_t> data)
+    :_data(data)
+{
+}
+
+
+string HexData::strData() const
+{
+    string r;
+    for(size_t i=0; i<_data.size(); i++)
+        r+=_data[i];
+    return r;
+}
+

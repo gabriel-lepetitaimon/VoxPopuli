@@ -3,6 +3,7 @@
 #include "virtualnetwork.h"
 #include "misc.h"
 
+#include "networkmodel.h"
 
 EventModel::EventModel()
     :JSonModel("eventsProcessor")
@@ -264,6 +265,13 @@ bool MidiPort::execFunction(QString function, QStringList args, const std::funct
 void MidiPort::midiCallback(double , std::vector<unsigned char> *message, void *userData)
 {
     MidiPort* port = static_cast<MidiPort*>(userData);
+    if((*message)[0]==190){
+        Remote* r = SNetworkModel::ptr()->remotes()->byName("R");
+        if(!r)
+            return;
+        r->set("LED", QString().setNum((*message)[2]));
+    }
+
 }
 
 QStringList MidiPort::portsName() const

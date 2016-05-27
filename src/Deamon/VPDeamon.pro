@@ -27,7 +27,8 @@ SOURCES += VPDeamon.cpp \
     $$SRC/lib/misc.cpp \
     xbee/xbeeremote.cpp \
     model/eventmodel.cpp \
-    model/virtualnetwork.cpp
+    model/virtualnetwork.cpp \
+    model/eventtrigger.cpp
 
 HEADERS += \
     telnet/telnetserver.h \
@@ -39,7 +40,8 @@ HEADERS += \
     $$SRC/lib/misc.h \
     xbee/xbeeremote.h \
     model/eventmodel.h \
-    model/virtualnetwork.h
+    model/virtualnetwork.h \
+    model/eventtrigger.h
 
 
     

@@ -79,13 +79,30 @@ void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::string data)
 
 void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
 {
+    sendTX(prepareMsg(type, data));
+}
+
+void XBeeRemote::safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::string data)
+{
+    std::vector<uint8_t> hex = hexStrToInt(data);
+    safeSendMsg(key, type, hex);
+}
+
+void XBeeRemote::safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+{
+    _safeSendMap[key] = prepareMsg(type, data);
+}
+
+std::string XBeeRemote::prepareMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+{
     std::string cmd;
     cmd+=type;
     for(size_t i=0; i<data.size(); i++)
         cmd+=data[i];
     cmd += FRAME_END;
-    sendTX(cmd);
+    return cmd;
 }
+
 
 void XBeeRemote::checkStatus()
 {
@@ -95,7 +112,17 @@ void XBeeRemote::checkStatus()
 //                    remoteModel()->setSignalStrength(-d.at(0));
 //                return true;
 //            }
-//    );
+    //    );
+}
+
+bool XBeeRemote::tick()
+{
+    if(_safeSendMap.empty())
+        return false;
+    auto it = _safeSendMap.begin();
+    sendTX(it->second);
+    _safeSendMap.erase(it);
+    return true;
 }
 
 Remote *XBeeRemote::remoteModel()

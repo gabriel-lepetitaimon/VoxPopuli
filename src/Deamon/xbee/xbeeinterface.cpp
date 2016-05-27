@@ -168,11 +168,24 @@ void XBeeInterface::standardRun()
 
 
         xbee_dev_tick(&_xbee);
+
+        if(_fastCycle){
+            _fastCycle = false;
+           // continue;
+        }
+
+        for(size_t i=0; i<_remotes.size(); i++){
+            if(_remotes[i].tick())
+                break;
+        }
+
+
         if(_frameStep==5*FRAMERATE)
             _frameStep = 0;
         else
             _frameStep++;
-        msleep(1000/FRAMERATE);
+        msleep(2500/FRAMERATE);
+
     }
 
     _frameStep = -1;
@@ -267,7 +280,7 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, v
     xbee_cmd_set_param_bytes(c, args.data(), args.size());
 
     xbee_cmd_set_flags(c, XBEE_CMD_FLAG_REMOTE);
-
+    _fastCycle = true;
     return c;
 }
 
@@ -353,6 +366,8 @@ bool XBeeInterface::sendRemoteTX(std::string cmd, const uint8_t dest[])
 
     header.push_back(0x00);         //Broadcast radius
     header.push_back(0x00);         //Options
+
+    _fastCycle = true;
 
     return !xbee_frame_write(&_xbee, header.data(), header.size(), cmd.data(), cmd.length(), XBEE_DEV_FLAG_NONE);
 }

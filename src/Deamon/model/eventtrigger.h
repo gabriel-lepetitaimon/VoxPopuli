@@ -26,15 +26,15 @@ public:
     QStringList definitions() const;
     bool isInEvent() const {return _inEvent;}
 
-    void addEvent(QString definition);
-    void addEvent(QString definition, EventCb cb);
-    void addEvent(QString definition, SimplifiedEventCb cb);
-    bool removeEvent(QString definition);
-
 signals:
     void triggrered(uint8_t data);
 public slots:
     void trigger(uint8_t data = 0x00);
+    bool addEvent(QString definition);
+    void addEvent(QString definition, EventCb cb);
+    void addEvent(QString definition, SimplifiedEventCb cb);
+    bool removeEvent(QString definition);
+
 };
 
 #endif // EVENTTRIGGER_H

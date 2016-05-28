@@ -7,6 +7,7 @@ NetworkModel::NetworkModel()
     :JSonModel("network")
 {
     _remotes = 0;
+    _patch = 0;
     initModel();
 }
 
@@ -23,6 +24,14 @@ bool NetworkModel::createSubNode(QString name, const QJsonObject &data)
         if(!_remotes->populateNode(data)){
             delete _remotes;
             _remotes = 0;
+            return false;
+        }
+        return true;
+    }else if(name == "Patch"){
+        _patch = new Patch(this);
+        if(!_patch->populateNode(data)){
+            delete _patch;
+            _patch = 0;
             return false;
         }
         return true;
@@ -95,10 +104,7 @@ bool RemoteList::addRemote(QString address)
         nbr++;
     remoteName += QString().setNum(nbr);
 
-    if(createSubNode(remoteName, Remote::createRemoteJSon(address))){
-        printOut('.'+remoteName+" added");
-        _remotes.last()->printOut();
-    }
+    createSubNode(remoteName, Remote::createRemoteJSon(address));
 
     return true;
 }
@@ -161,7 +167,7 @@ Remote *RemoteList::byAddr(QString addr)
 
 
 /********************************************
- *              Remote                  *
+ *              Remote                      *
  *******************************************/
 
 Remote::Remote(QString name, QString mac, RemoteList *list)
@@ -176,7 +182,7 @@ Remote::~Remote()
         remote()->clearRemoteModel();
 }
 
-void Remote::setButtonState(Remote::Button b, bool pressed)
+void Remote::setButtonState(Remote::FTriggerEvent b, bool pressed)
 {
     QString bName;
     switch(b){
@@ -302,3 +308,6 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
 
     return JSonNode::setValue(name, value);
 }
+
+
+

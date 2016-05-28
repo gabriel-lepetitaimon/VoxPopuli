@@ -73,6 +73,7 @@ protected:
     SetError setBool(QString name, QString value);
     SetError setBool(QString name, bool value);
     virtual SetError parseArray(QString name, QStringList value);
+    void valueChanged(QString name);
 
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){});
     void printOut(QString msg);
@@ -86,8 +87,6 @@ protected:
 
 private:
     QList<JSonNode*> _subnodes;
-
-    void valueChanged(QString name);
 };
 
 

@@ -148,10 +148,7 @@ bool MidiInterface::addPort(QString portName, bool inPort, QString port)
             return false;
     }
 
-    if(createSubNode(portName, MidiPort::createMidiPortJSon(inPort, port))){
-        printOut('.'+portName+" added");
-        _ports.last()->printOut();
-    }
+    createSubNode(portName, MidiPort::createMidiPortJSon(inPort, port));
     return true;
 }
 

@@ -15,26 +15,27 @@ QStringList EventTrigger::definitions() const
     return _callbacks.keys();
 }
 
-void EventTrigger::addEvent(QString definition)
+bool EventTrigger::addEvent(QString definition)
 {
 
     QStringList def = definition.split('|');
     if(def.isEmpty())
-        return;
+        return false;
 
-    QList<MidiPort*> ports = SEventModel::ptr()->midi()->ports();
-    foreach(MidiPort* port, ports){
-        if(port->isInPort()!=_inEvent)
-            continue;
-        if(port->name() != def[0])
-            continue;
+//    QList<MidiPort*> ports = SEventModel::ptr()->midi()->ports();
+//    foreach(MidiPort* port, ports){
+//        if(port->isInPort()!=_inEvent)
+//            continue;
+//        if(port->name() != def[0])
+//            continue;
 
-        if(_inEvent){
+//        if(_inEvent){
 
-        }else{
+//        }else{
 
-        }
-    }
+//        }
+//    }
+    return true;
 }
 
 void EventTrigger::addEvent(QString definition, EventCb cb)

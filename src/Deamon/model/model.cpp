@@ -45,13 +45,17 @@ bool JSonNode::getToString(const QString &name, QString &result) const
         break;
     case QVariant::List:
          l = v.toList();
+         if(l.isEmpty()){
+             result = "[]";
+             return true;
+         }
         result = '[';
         foreach(QVariant var, l){
             if(var.type() == QVariant::Bool)
                 result += var.toBool()?"true":"false";
             else if(var.type() == QVariant::Double)
                 result += QString().setNum(var.toDouble());
-            else if(var.type() == QVariant::Bool)
+            else if(var.type() == QVariant::String)
                 result += '"'+var.toString()+'"';
             result+=", ";
         }
@@ -251,6 +255,10 @@ QString JSonNode::address() const
 
 bool JSonNode::populateNode(const QJsonObject& data)
 {
+
+    if(_name.contains(' '))
+        return false;
+
     for(auto it = data.begin(); it!=data.end(); it++){
         QString k = it.key();
         QJsonValue v = it.value();
@@ -313,6 +321,8 @@ void JSonNode::addSubNode(JSonNode *node)
 {
     _subnodes.append(node);
     _jsonData[node->name()] = node->_jsonData;
+    printOut('.'+node->name()+" added");
+    node->printOut();
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
 }
 

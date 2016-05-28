@@ -28,7 +28,8 @@ SOURCES += VPDeamon.cpp \
     xbee/xbeeremote.cpp \
     model/eventmodel.cpp \
     model/virtualnetwork.cpp \
-    model/eventtrigger.cpp
+    model/eventtrigger.cpp \
+    model/patch.cpp
 
 HEADERS += \
     telnet/telnetserver.h \
@@ -41,7 +42,8 @@ HEADERS += \
     xbee/xbeeremote.h \
     model/eventmodel.h \
     model/virtualnetwork.h \
-    model/eventtrigger.h
+    model/eventtrigger.h \
+    model/patch.h
 
 
     

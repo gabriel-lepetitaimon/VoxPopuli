@@ -4,117 +4,125 @@
 #include <QList>
 #include <QMap>
 #include "eventmodel.h"
-//#include "eventtrigger.h"
+#include "eventtrigger.h"
 
-//class VirtualRemote;
-//class Event;
-//class Group;
+class VirtualRemote;
+class Event;
+class VirtualGroup;
 
 class VirtualNetwork: public JSonNode
 {
     Q_OBJECT
-//    EventModel* _eventModel;
+    EventModel* _eventModel;
 public:
     VirtualNetwork(EventModel* eventModel);
     virtual ~VirtualNetwork() {}
-//    bool createSubNode(QString name, const QJsonObject& data);
+    bool createSubNode(QString name, const QJsonObject& data);
 
-//    bool addRemote(QString name="");
-//    VirtualRemote* remoteByName(QString name);
-//    bool removeRemote(QString name);
+    bool addRemote(QString name="");
+    VirtualRemote* remoteByName(QString name);
+    bool removeRemote(QString name);
 
-//    bool addGroup(QString name=0);
-//    Group* groupByName(QString name);
-//    bool removeGroup(QString name);
+    bool addGroup(QString name=0);
+    VirtualGroup* groupByName(QString name);
+    bool removeGroup(QString name);
 
-//    void autoGenerateRemote();
+    void autoGenerateRemote();
 
-//    EventModel* eventModel() {return _eventModel;}
+    EventModel* eventModel() {return _eventModel;}
 
-//protected:
-//    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+protected:
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
 
-//private:
-//    QList<VirtualRemote*> _vRemotes;
-//    QList<Group*> _vGroups;
+private:
+    QList<VirtualRemote*> _vRemotes;
+    QList<VirtualGroup*> _vGroups;
 };
 
-//class VirtualRemote: public JSonNode
-//{
-//    Q_OBJECT
+class VirtualRemote: public JSonNode
+{
+    Q_OBJECT
 
-//    VirtualNetwork* _vNet;
+    VirtualNetwork* _vNet;
+    VirtualGroup* _group=0;
 
-//public:
-//    VirtualRemote(QString name, VirtualNetwork* virtualNet);
-//    virtual ~VirtualRemote();
-//    bool createSubNode(QString name, const QJsonObject& data);
+public:
+    VirtualRemote(QString name, VirtualNetwork* virtualNet);
+    VirtualRemote(QString name, VirtualGroup* group);
 
-//    VirtualNetwork* virtualNet() {return _vNet;}
-//    static QJsonObject createVirtualRemoteJSon();
-//protected:
-//    SetError setValue(QString name, QString value);
-//    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual ~VirtualRemote() {}
+    bool createSubNode(QString name, const QJsonObject& data);
 
-//    QList<Event*> _eventsHandler;
-//};
+    VirtualNetwork* virtualNet() {return _vNet;}
+    static QJsonObject createVirtualRemoteJSon();
+protected:
+    SetError setValue(QString name, QString value);
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
-//class Event: public JSonNode
-//{
-//    Q_OBJECT
-//    VirtualRemote* _remote;
-//    bool _inEvents;
-//    EventTrigger* _anyTrigger;
-//    QMap<QString, EventTrigger*> _triggers;
+    QList<Event*> _eventsHandler;
 
-//public:
-//    Event(VirtualRemote* remote, bool inEvents);
+private:
+    void initEventsHandler();
+};
 
-//    void addEvent(QString description, QString trigger="any");
-//    bool removeEvent(QString definition, QString trigger="any");
-//    EventTrigger* eventByTrigger(QString trigger="any");
-//    QStringList triggers() const;
+class Event: public JSonNode
+{
+    Q_OBJECT
+    VirtualRemote* _remote;
+    bool _inEvents;
+    EventTrigger* _anyTrigger;
+    QMap<QString, EventTrigger*> _triggers;
 
-//    bool triggerEvent(QString trigger);
+public:
+    Event(QString name, VirtualRemote* remote, bool inEvents);
 
-//    bool isInEvents() const;
-//    VirtualRemote* remote();
+    bool addEvent(QString description, QString trigger="any");
+    bool removeEvent(QString definition, QString trigger="any");
+    EventTrigger* eventByTrigger(QString trigger="any");
+    QStringList triggers() const;
 
-//    static QJsonObject createEventJSon();
+    bool triggerEvent(QString trigger);
 
-//protected:
-//    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
-//};
+    bool isInEvents() const;
+    VirtualRemote* remote();
 
+    static QJsonObject createEventJSon();
 
-
-//class Group: public JSonNode
-//{
-//    Q_OBJECT
-//    VirtualNetwork* _vNet;
-//public:
-//    Group(QString name, VirtualNetwork* virtualNet);
-//    virtual ~Group() {}
-
-//    VirtualNetwork* virtualNet();
-
-//    void setSlavesNbr(int nbr);
-
-//    VirtualRemote* globalRemote();
-//    void setSpecialRemotesNbr(int nbr);
-//    int getSpecialRemoteNbr() const;
-//    VirtualRemote* specialRemote(int id);
-
-//    static QJsonObject createGroupJSon();
-
-//protected:
-//    VirtualRemote* _globalRemote;
-//    QList<VirtualRemote*> _specialRemotes;
-//    SetError setValue(QString name, QString value);
-//    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+protected:
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual JSonNode::SetError parseArray(QString name, QStringList value);
+};
 
 
-//};
+
+class VirtualGroup: public JSonNode
+{
+    Q_OBJECT
+    VirtualNetwork* _vNet;
+public:
+    VirtualGroup(QString name, VirtualNetwork* virtualNet);
+    virtual ~VirtualGroup() {}
+
+    VirtualNetwork* virtualNet();
+
+    void setSlavesNbr(int nbr);
+
+    VirtualRemote* globalRemote();
+    void setVirtualRemotesNbr(int nbr);
+    int getVirtualRemoteNbr() const {return _virtualRemotes.size();}
+    VirtualRemote* virtualRemote(int id);
+
+    static QJsonObject createGroupJSon();
+    bool createSubNode(QString name, const QJsonObject& data);
+
+protected:
+    VirtualRemote* _globalRemote;
+    QList<VirtualRemote*> _virtualRemotes;
+    SetError setValue(QString name, QString value);
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+
+
+};
 
 #endif // VIRTUALNETWORK_H

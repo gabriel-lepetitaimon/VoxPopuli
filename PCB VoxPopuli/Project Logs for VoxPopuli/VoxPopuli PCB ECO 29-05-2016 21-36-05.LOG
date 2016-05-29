@@ -1,0 +1,4 @@
+Removed Pin From Net: NetName=GND Pin=Pow pile-1
+Removed Pin From Net: NetName=VCC Pin=Pow pile-2
+Added Pin To Net: NetName=VCC Pin=Pow pile-1
+Added Pin To Net: NetName=GND Pin=Pow pile-2

@@ -1,0 +1,90 @@
+Removed Pin From Net: NetName=NetArduino_21 Pin=Arduino-21
+Removed Pin From Net: NetName=NetArduino_22 Pin=Arduino-22
+Removed Pin From Net: NetName=NetArduino_23 Pin=Arduino-23
+Removed Pin From Net: NetName=NetArduino_24 Pin=Arduino-24
+Removed Pin From Net: NetName=NetArduino_25 Pin=Arduino-25
+Removed Pin From Net: NetName=NetArduino_26 Pin=Arduino-26
+Removed Pin From Net: NetName=NetArduino_27 Pin=Arduino-27
+Removed Pin From Net: NetName=NetArduino_28 Pin=Arduino-28
+Removed Pin From Net: NetName=NetArduino_29 Pin=Arduino-29
+Removed Pin From Net: NetName=NetArduino_30 Pin=Arduino-30
+Removed Pin From Net: NetName=NetArduino_31 Pin=Arduino-31
+Removed Pin From Net: NetName=NetArduino_32 Pin=Arduino-32
+Removed Pin From Net: NetName=NetArduino_32 Pin=P0-1
+Removed Pin From Net: NetName=NetArduino_31 Pin=P0-2
+Removed Pin From Net: NetName=NetArduino_30 Pin=P0-3
+Removed Pin From Net: NetName=NetArduino_29 Pin=P0-4
+Removed Pin From Net: NetName=NetArduino_28 Pin=P0-5
+Removed Pin From Net: NetName=NetArduino_27 Pin=P0-6
+Removed Pin From Net: NetName=NetArduino_26 Pin=P0-7
+Removed Pin From Net: NetName=NetArduino_25 Pin=P0-8
+Removed Pin From Net: NetName=NetArduino_24 Pin=P0-9
+Removed Pin From Net: NetName=NetArduino_23 Pin=P0-10
+Removed Pin From Net: NetName=NetArduino_22 Pin=P0-11
+Removed Pin From Net: NetName=NetArduino_21 Pin=P0-12
+Removed Pin From Net: NetName=NetArduino_26 Pin=R3-1
+Removed Pin From Net: NetName=NetArduino_22 Pin=Xbee-2
+Removed Pin From Net: NetName=NetArduino_21 Pin=Xbee-3
+Removed Pin From Net: NetName=NetArduino_32 Pin=Xbee-13
+Removed Member From Class: ClassName=VoxPopuli Member=P0
+Change Component Footprint: Designator=LED1 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=LED2 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=LED3 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=R1 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=R2 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=R3 Old Footprint=HDR1X2 New Footprint=HEADER 2
+Change Component Footprint: Designator=P4 Old Footprint=HDR1X12 New Footprint=HEADER 12
+Change Component Designator: OldDesignator=C? NewDesignator=C1
+Change Component Designator: OldDesignator=P4 NewDesignator=ArdH2
+Added Component: Designator=ArdH1(HEADER 12)
+Added Pin To Net: NetName=NetArduino_21 Pin=ArdH1-1
+Added Pin To Net: NetName=NetArduino_22 Pin=ArdH1-2
+Added Pin To Net: NetName=NetArduino_23 Pin=ArdH1-3
+Added Pin To Net: NetName=NetArduino_24 Pin=ArdH1-4
+Added Pin To Net: NetName=NetArduino_25 Pin=ArdH1-5
+Added Pin To Net: NetName=NetArduino_26 Pin=ArdH1-6
+Added Pin To Net: NetName=NetArduino_27 Pin=ArdH1-7
+Added Pin To Net: NetName=NetArduino_28 Pin=ArdH1-8
+Added Pin To Net: NetName=NetArduino_29 Pin=ArdH1-9
+Added Pin To Net: NetName=NetArduino_30 Pin=ArdH1-10
+Added Pin To Net: NetName=NetArduino_31 Pin=ArdH1-11
+Added Pin To Net: NetName=NetArduino_32 Pin=ArdH1-12
+Added Pin To Net: NetName=NetArduino_32 Pin=Arduino-21
+Added Pin To Net: NetName=NetArduino_31 Pin=Arduino-22
+Added Pin To Net: NetName=NetArduino_30 Pin=Arduino-23
+Added Pin To Net: NetName=NetArduino_29 Pin=Arduino-24
+Added Pin To Net: NetName=NetArduino_28 Pin=Arduino-25
+Added Pin To Net: NetName=NetArduino_27 Pin=Arduino-26
+Added Pin To Net: NetName=NetArduino_26 Pin=Arduino-27
+Added Pin To Net: NetName=NetArduino_25 Pin=Arduino-28
+Added Pin To Net: NetName=NetArduino_24 Pin=Arduino-29
+Added Pin To Net: NetName=NetArduino_23 Pin=Arduino-30
+Added Pin To Net: NetName=NetArduino_22 Pin=Arduino-31
+Added Pin To Net: NetName=NetArduino_21 Pin=Arduino-32
+Added Pin To Net: NetName=NetArduino_27 Pin=R3-1
+Added Pin To Net: NetName=NetArduino_31 Pin=Xbee-2
+Added Pin To Net: NetName=NetArduino_32 Pin=Xbee-3
+Added Pin To Net: NetName=NetArduino_21 Pin=Xbee-13
+Change Net Name : Old Net Name=NetArduino_21 New Net Name=NetArdH1_1
+Change Net Name : Old Net Name=NetArduino_22 New Net Name=NetArdH1_2
+Change Net Name : Old Net Name=NetArduino_23 New Net Name=NetArdH1_3
+Change Net Name : Old Net Name=NetArduino_24 New Net Name=NetArdH1_4
+Change Net Name : Old Net Name=NetArduino_25 New Net Name=NetArdH1_5
+Change Net Name : Old Net Name=NetArduino_26 New Net Name=NetArdH1_6
+Change Net Name : Old Net Name=NetArduino_27 New Net Name=NetArdH1_7
+Change Net Name : Old Net Name=NetArduino_28 New Net Name=NetArdH1_8
+Change Net Name : Old Net Name=NetArduino_29 New Net Name=NetArdH1_9
+Change Net Name : Old Net Name=NetArduino_30 New Net Name=NetArdH1_10
+Change Net Name : Old Net Name=NetArduino_31 New Net Name=NetArdH1_11
+Change Net Name : Old Net Name=NetArduino_32 New Net Name=NetArdH1_12
+Change Net Name : Old Net Name=NetArduino_33 New Net Name=NetArdH2_12
+Change Net Name : Old Net Name=NetArduino_35 New Net Name=NetArdH2_10
+Change Net Name : Old Net Name=NetArduino_37 New Net Name=NetArdH2_8
+Change Net Name : Old Net Name=NetArduino_38 New Net Name=NetArdH2_7
+Change Net Name : Old Net Name=NetArduino_39 New Net Name=NetArdH2_6
+Change Net Name : Old Net Name=NetArduino_41 New Net Name=NetArdH2_4
+Change Net Name : Old Net Name=NetArduino_42 New Net Name=NetArdH2_3
+Change Net Name : Old Net Name=NetArduino_43 New Net Name=NetArdH2_2
+Change Net Name : Old Net Name=NetArduino_44 New Net Name=NetArdH2_1
+Change Net Name : Old Net Name=NetC?_1 New Net Name=NetC1_1
+Added Member To Class: ClassName=VoxPopuli Member=Component ArdH1 Header 12

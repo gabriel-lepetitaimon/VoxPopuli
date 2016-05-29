@@ -10,7 +10,7 @@ JSonNode::JSonNode(QString name, JSonNode *parent, const JSonNodeFlag& flags )
 
 }
 
-QVariant JSonNode::get(const QString &name)
+QVariant JSonNode::get(const QString &name) const
 {
     return _jsonData.value(name).toVariant();
 }

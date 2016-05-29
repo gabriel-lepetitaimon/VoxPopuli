@@ -6,8 +6,8 @@
 NetworkModel::NetworkModel()
     :JSonModel("network")
 {
-    _remotes = 0;
-    _patch = 0;
+    _remotes = new RemoteList(this);
+    _patch = new Patch(this);
     initModel();
 }
 
@@ -19,23 +19,10 @@ void NetworkModel::setXbeeUsbPort(std::string port)
 
 bool NetworkModel::createSubNode(QString name, const QJsonObject &data)
 {
-    if(name == "Remotes"){
-        _remotes = new RemoteList(this);
-        if(!_remotes->populateNode(data)){
-            delete _remotes;
-            _remotes = 0;
-            return false;
-        }
-        return true;
-    }else if(name == "Patch"){
-        _patch = new Patch(this);
-        if(!_patch->populateNode(data)){
-            delete _patch;
-            _patch = 0;
-            return false;
-        }
-        return true;
-    }
+    if(name == "Remotes")
+        return _remotes->populateNode(data);
+    else if(name == "Patch")
+        return _patch->populateNode(data);
 
     return false;
 }
@@ -182,28 +169,37 @@ Remote::~Remote()
         remote()->clearRemoteModel();
 }
 
-void Remote::setButtonState(Remote::FTriggerEvent b, bool pressed)
+void Remote::setButtonState(XBEE_MSG_TYPE b, bool pressed)
 {
+    FTriggerEvent e;
     QString bName;
     switch(b){
-    case Remote::UP:
-        bName = "BUp";
+    case BUTTON_UP:
+        bName = "Up";
+        e=UP;
         break;
-    case Remote::DOWN:
-        bName = "BDown";
+    case BUTTON_DOWN:
+        bName = "Down";
+        e=DOWN;
         break;
-    case Remote::RIGHT:
-        bName = "BRight";
+    case BUTTON_RIGHT:
+        bName = "Right";
+        e=RIGHT;
         break;
-    case Remote::LEFT:
-        bName = "BLeft";
+    case BUTTON_LEFT:
+        bName = "Left";
+        e=LEFT;
         break;
-    case Remote::ACTION:
-        bName = "BCenter";
+    case BUTTON_ACTION:
+        bName = "Action";
+        e=ACTION;
         break;
+    default:
+        return;
     }
 
-    setBool(bName, pressed);
+    fastTrigger(e, pressed?1:0);
+    setString(bName, pressed?"down":"up");
 }
 
 void Remote::setSignalStrength(int dB)
@@ -228,11 +224,11 @@ QJsonObject Remote::createRemoteJSon( QString address)
     o.insert("State", "Initializing");
     o.insert("SignalStrength", "NA");
     o.insert("Battery", "HIGH");
-    o.insert("BUp",false);
-    o.insert("BDown",false);
-    o.insert("BLeft",false);
-    o.insert("BRight",false);
-    o.insert("BCenter",false);
+    o.insert("Up","up");
+    o.insert("Down","up");
+    o.insert("Left","up");
+    o.insert("Right","up");
+    o.insert("Action","up");
     o.insert("LED", 0);
 
     return o;
@@ -283,6 +279,20 @@ XBeeRemote *Remote::remote()
     return 0;
 }
 
+JSonNode::SetError Remote::fastTrigger(FTriggerEvent e, const HexData &v)
+{
+    if(e==LED){
+        if(remote())
+            remote()->safeSendMsg("L",LED_INTENSITY, v);
+        return setNumber("LED", v.toInt());
+    }else{
+        SNetworkModel::ptr()->patch()->fastTriggerRemote(_name, e, v);
+        return NoError;
+    }
+
+    return WrongArg;
+}
+
 JSonNode::SetError Remote::setValue(QString name, QString value)
 {
     if(name=="LED"){
@@ -290,18 +300,13 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
         uint8_t intensity = value.toInt(&success);
         if(!success)
             return WrongArg;
-        if(remote())
-            remote()->safeSendMsg("L",LED_INTENSITY, std::vector<uint8_t>({intensity}));
-
-        return setNumber(name, intensity);
+        return fastTrigger(LED, intensity);
     }else if(name=="State"){
         if(remote()){
-        if(value=="active")
-            remote()->safeSendMsg("S", ACTIVE_MODE);
-        else if(value == "mute")
-            remote()->safeSendMsg("S", MUTE_MODE);
-        else
-            return JSonNode::setValue(name, value);
+            if(value=="active")
+                remote()->safeSendMsg("S", ACTIVE_MODE);
+            else if(value == "mute")
+                remote()->safeSendMsg("S", MUTE_MODE);
         }
         return JSonNode::setString(name, value);
     }

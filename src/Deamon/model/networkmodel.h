@@ -67,26 +67,17 @@ class Remote: public JSonNode
 
 public:
 
-    enum FTriggerEvent{
-        UP=0,
-        DOWN=1,
-        RIGHT=2,
-        LEFT=3,
-        ACTION=4,
-        LED=5
-    };
-
     Remote(QString name, QString mac, RemoteList* list);
     virtual ~Remote();
 
     static QJsonObject createRemoteJSon(QString address);
-    void setButtonState(FTriggerEvent b, bool pressed);
+    void setButtonState(XBEE_MSG_TYPE b, bool pressed);
     void setSignalStrength(int dB);
 
     QString macAddress() const {return _jsonData.value("MAC").toString("");}
     XBeeRemote* remote();
 
-    //void fastTrigger(FTriggerEvent e, const HexData& v);
+    SetError fastTrigger(FTriggerEvent e, const HexData& v);
 
 protected:
     SetError setValue(QString name, QString value);

@@ -40,7 +40,7 @@ public:
     JSonNode*           parentNode()    const {return _parentNode;}
 
     QString             address() const;
-    QVariant get(const QString& name);
+    QVariant get(const QString& name) const;
     bool getToString(const QString& name, QString &result) const;
 
     void printOut();

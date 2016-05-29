@@ -8,20 +8,52 @@
 char intToHex(uint8_t value);
 uint8_t hexToInt(char value);
 
-std::string intToHexStr(std::vector<uint8_t> v);
-
-std::vector<uint8_t> hexStrToInt(std::string str);
+std::string intToHexStr(const std::vector<uint8_t> &v);
+std::vector<uint8_t> hexStrToInt(const std::string& str);
 
 class HexData{
-    std::vector<uint8_t> _data;
 public:
+    HexData();
     HexData(std::string data);
     HexData(std::vector<uint8_t> data);
-    //static fromHexStr(std::string data);
+    HexData(uint8_t data);
+    HexData(const HexData& data);
+    ~HexData();
 
-    std::string toHexStr() const {return intToHexStr(_data);}
+    static HexData fromHexStr(std::string data);
+
+    std::string toHexStr() const;
     std::string strData() const;
-    const std::vector<uint8_t>& data() const {return _data;}
+    unsigned int toInt() const;
+    bool toInt(unsigned int& r) const;
+    const std::vector<uint8_t> &data() const;
+
+    uint8_t byteAt(int i) const {return (*_data)[i];}
+    uint8_t& operator[](size_t i) {return(*_data)[i];}
+    const uint8_t& operator[](size_t i) const {return (*_data)[i];}
+    size_t size() const {return _data->size();}
+
+    void prepend(const std::vector<uint8_t>& data);
+    void prepend(uint8_t data);
+    void prepend(const std::string& data){ prepend(hexStrToInt(data));}
+
+    void append(const std::vector<uint8_t>& data);
+    void append(uint8_t data);
+    void append(const std::string& data){ append(hexStrToInt(data));}
+
+    HexData operator+=(const HexData& data);
+    HexData operator+=(const std::vector<uint8_t>& data);
+    HexData operator+=(const std::string& data);
+    HexData operator+=(uint8_t data);
+
+
+    HexData operator+(const HexData& data) const;
+    HexData operator+(uint8_t data) const;
+
+protected:
+    HexData(std::vector<uint8_t>* emplace);
+    std::vector<uint8_t>* _data;
+
 };
 
 

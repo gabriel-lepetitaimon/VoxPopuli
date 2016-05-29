@@ -10,8 +10,8 @@ int main(int argc, char *argv[])
 
 
     SXBeeInterface::init();
-    SEventModel::init();
     SNetworkModel::init();
+    SEventModel::init();
     STelnetServer::init();
 
     SXBeeInterface::ptr()->start();
@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
     SXBeeInterface::ptr()->wait();
 
     STelnetServer::clean();
-    SNetworkModel::clean();
     SEventModel::clean();
+    SNetworkModel::clean();
     SXBeeInterface::clean();
 
     return r;

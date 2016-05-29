@@ -11,13 +11,14 @@ VirtualNetwork::VirtualNetwork(EventModel *eventModel)
 
 bool VirtualNetwork::createSubNode(QString name, const QJsonObject &data)
 {
-    if(data.contains("slaveNbr")){
+    if(data.contains("GlobalRemote")){
         VirtualGroup* g = new VirtualGroup(name, this);
         if(!g->populateNode(data)){
             delete g;
             return false;
         }
         _vGroups.append(g);
+        g->updateFromPatch();
         return true;
     }else if(data.contains("LED")){
         VirtualRemote* r = new VirtualRemote(name, this);
@@ -26,6 +27,7 @@ bool VirtualNetwork::createSubNode(QString name, const QJsonObject &data)
             return false;
         }
         _vRemotes.append(r);
+        r->updateVirtualRemote();
         return true;
     }
     return false;
@@ -117,6 +119,29 @@ void VirtualNetwork::autoGenerateRemote()
     }
 }
 
+void VirtualNetwork::fastTrigger(QStringList virtualElements, QString remoteName, FTriggerEvent e, const HexData &data)
+{
+    foreach(QString elementName, virtualElements){
+        bool found = false;
+        for (int i = 0; i < _vGroups.size(); ++i) {
+            if(_vGroups.at(i)->name()==elementName){
+                found = true;
+                _vGroups.at(i)->fastTrigger(remoteName, e, data);
+                break;
+            }
+        }
+        if(found)
+            continue;
+        for (int i = 0; i < _vRemotes.size(); ++i) {
+            if(_vRemotes.at(i)->name()==elementName){
+                found = true;
+                _vRemotes.at(i)->fastTrigger( e, data);
+                break;
+            }
+        }
+    }
+}
+
 bool VirtualNetwork::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
 {
     if(function=="addRemote"){
@@ -193,15 +218,15 @@ bool VirtualRemote::createSubNode(QString name, const QJsonObject &data)
 {
     if(name=="EventUp" || name=="EventDown" || name=="EventLeft" || name=="EventRight" || name=="EventAction"){
 
-        int id = Remote::ACTION;
+        int id = ACTION;
         if(name=="EventUp")
-            id = Remote::UP;
+            id = UP;
         else if(name=="EventDown")
-            id = Remote::DOWN;
+            id = DOWN;
         else if(name=="EventLeft")
-            id = Remote::LEFT;
+            id = LEFT;
         else if(name=="EventRight")
-            id = Remote::RIGHT;
+            id = RIGHT;
 
         if(!_eventsHandler[id]->populateNode(data))
             return false;
@@ -215,11 +240,11 @@ QJsonObject VirtualRemote::createVirtualRemoteJSon()
 {
     QJsonObject o;
     o.insert("LED", 0);
-    o.insert("Up", "OFF");
-    o.insert("Down", "OFF");
-    o.insert("Left", "OFF");
-    o.insert("Right", "OFF");
-    o.insert("Action", "OFF");
+    o.insert("Up", "up");
+    o.insert("Down", "up");
+    o.insert("Left", "up");
+    o.insert("Right", "up");
+    o.insert("Action", "up");
     o.insert("State", "active");
 
     o.insert("EventUp", Event::createEventJSon());
@@ -230,62 +255,94 @@ QJsonObject VirtualRemote::createVirtualRemoteJSon()
     return o;
 }
 
+JSonNode::SetError VirtualRemote::fastTrigger(FTriggerEvent e, const HexData &data)
+{
+    if(e==LED){
+        sendFastTrigger( e, data);
+        return setNumber("LED", data.toInt());
+    }
+
+    _eventsHandler[e]->triggerEvent(data.toInt()?"down":"up");
+    return setString(eventName(e), data.toInt()?"down":"up");
+}
+
+void VirtualRemote::sendFastTrigger(FTriggerEvent e, const HexData &data)
+{
+    foreach(Remote* r, patchedRemotes())
+        r->fastTrigger(e, data);
+}
+
+
+QList<Remote*> VirtualRemote::patchedRemotes() const
+{
+    QList<Remote*>r;
+    if(_group){
+        if(_name.startsWith("Global"))
+            return SNetworkModel::ptr()->patch()->remoteList(_group->name());
+        else{
+            QString rName = _group->slave(get("RemoteID").toInt());
+            Remote* remote=0;
+            if(!rName.isEmpty() && (remote=SNetworkModel::ptr()->remotes()->byName(rName)))
+                r.append(remote);
+        }
+    }else{
+        return SNetworkModel::ptr()->patch()->remoteList(_name);
+    }
+    return r;
+}
+
 JSonNode::SetError VirtualRemote::setValue(QString name, QString value)
 {
-    if(name=="Up"){
-        if(_jsonData.value("Up").toString()==value)
-            return JSonNode::SameValue;
-        if(value=="ON")
-            _eventsHandler[Remote::UP]->triggerEvent("up");
-        else if(value=="OFF")
-            _eventsHandler[Remote::UP]->triggerEvent("down");
-        else
+    if(name=="Up" || name=="Down" || name == "Left" || name == "Right" || name=="Action"){
+        HexData d((uint8_t)0);
+        if(value=="down")
+            d=1;
+        else if(value!="up")
             return WrongArg;
-        return setString(name, value);
-    }else if(name=="Down"){
-        if(_jsonData.value("Down").toString()==value)
-            return JSonNode::SameValue;
-        if(value=="ON")
-            _eventsHandler[Remote::DOWN]->triggerEvent("up");
-        else if(value=="OFF")
-            _eventsHandler[Remote::DOWN]->triggerEvent("down");
-        else
+
+        return fastTrigger(eventID(name), d);
+    }else if(name=="LED"){
+        bool success;
+        uint8_t intensity = value.toInt(&success);
+        if(!success)
             return WrongArg;
-        return setString(name, value);
-    }else if(name=="Left"){
-        if(_jsonData.value("Left").toString()==value)
-            return JSonNode::SameValue;
-        if(value=="ON")
-            _eventsHandler[Remote::LEFT]->triggerEvent("up");
-        else if(value=="OFF")
-            _eventsHandler[Remote::LEFT]->triggerEvent("down");
-        else
+        return fastTrigger(LED, intensity);
+    }else if(name=="State"){
+        foreach(Remote* r, patchedRemotes())
+            r->set("State", value);
+        return JSonNode::setString(name, value);
+    }else if(name=="remoteID" && _group){
+        bool success;
+        uint8_t id = value.toInt(&success);
+        if(!success)
             return WrongArg;
-        return setString(name, value);
-    }else if(name=="Right"){
-        if(_jsonData.value("Right").toString()==value)
-            return JSonNode::SameValue;
-        if(value=="ON")
-            _eventsHandler[Remote::RIGHT]->triggerEvent("up");
-        else if(value=="OFF")
-            _eventsHandler[Remote::RIGHT]->triggerEvent("down");
-        else
-            return WrongArg;
-        return setString(name, value);
-    }else if(name=="Action"){
-        if(_jsonData.value("Up").toString()==value)
-            return JSonNode::SameValue;
-        if(value=="ON")
-            _eventsHandler[Remote::UP]->triggerEvent("up");
-        else if(value=="OFF")
-            _eventsHandler[Remote::UP]->triggerEvent("down");
-        else
-            return WrongArg;
-        return setString(name, value);
+        JSonNode::SetError e = setNumber(name, id);
+        updateVirtualRemote();
+        return e;
     }
 
     return JSonNode::setValue(name, value);
 }
+
+void VirtualRemote::updateVirtualRemote()
+{
+    QList<Remote*> remotes;
+    if(remotes.isEmpty()){
+        // ---  RESET  ---
+        setString("Up",     "NA");
+        setString("Down",   "NA");
+        setString("Left",   "NA");
+        setString("Right",  "NA");
+        setString("Active", "NA");
+    }else{
+        setString("Up", remotes.first()->get("Up").toString());
+        setString("Down", remotes.first()->get("Down").toString());
+        setString("Left", remotes.first()->get("Left").toString());
+        setString("Right", remotes.first()->get("Right").toString());
+        setString("Active", remotes.first()->get("Active").toString());
+    }
+}
+
 
 bool VirtualRemote::execFunction(QString, QStringList, const std::function<void (QString)> &)
 {
@@ -430,26 +487,26 @@ JSonNode::SetError Event::parseArray(QString name, QStringList value)
 VirtualGroup::VirtualGroup(QString name, VirtualNetwork *virtualNet)
     :JSonNode(name, virtualNet, RENAMEABLE), _vNet(virtualNet)
 {
-
 }
 
 VirtualNetwork *VirtualGroup::virtualNet() {return _vNet;}
 
-void VirtualGroup::setSlavesNbr(int nbr)
-{
-    setNumber("slaveNbr", nbr);
-}
 
 VirtualRemote *VirtualGroup::globalRemote() {return _globalRemote;}
 
 void VirtualGroup::setVirtualRemotesNbr(int nbr)
 {
-    int delta = nbr-_jsonData.count()+2;
+    if(_jsonData.count()<3)
+        return;
+
+    int delta = nbr-_jsonData.count()+3;
 
     while(delta!=0){
         if(delta>0){
-            QString rName = "SRemote"+QString().setNum(nbr-delta+1);
-            createSubNode(rName, VirtualRemote::createVirtualRemoteJSon());
+            QString rName = "Remote"+QString().setNum(nbr-delta+1);
+            QJsonObject remoteJson = VirtualRemote::createVirtualRemoteJSon();
+            remoteJson.insert("remoteID", -1);
+            createSubNode(rName, remoteJson);
             delta--;
         }else{
             removeSubNode(_virtualRemotes.last());
@@ -466,11 +523,34 @@ VirtualRemote *VirtualGroup::virtualRemote(int id)
     return _virtualRemotes.at(id);
 }
 
+void VirtualGroup::addSlave(QString slaveName)
+{
+    if(_slaves.contains(slaveName))
+        return;
+    _slaves.append(slaveName);
+    setNumber("slavesNbr", _slaves.size());
+    updateFromPatch();
+}
+
+void VirtualGroup::removeSlave(QString slaveName)
+{
+    _slaves.removeOne(slaveName);
+    setNumber("slavesNbr", _slaves.size());
+    updateFromPatch();
+}
+
+QString VirtualGroup::slave(int id) const
+{
+    if(id<_slaves.size() && id>=0)
+        return _slaves.at(id);
+    return "";
+}
+
 QJsonObject VirtualGroup::createGroupJSon()
 {
     QJsonObject o;
-    o.insert("slaveNbr", 0);
-    o.insert("vRemotesNbr", 0);
+    o.insert("slavesNbr", 0);
+    o.insert("avatarsNbr", 0);
     o.insert("GlobalRemote", VirtualRemote::createVirtualRemoteJSon());
     return o;
 }
@@ -487,29 +567,56 @@ bool VirtualGroup::createSubNode(QString name, const QJsonObject &data)
             _globalRemote = r;
         else{
             bool success=false;
-            int remoteID = name.mid(5).toInt(&success);
+            int remoteID = name.mid(6).toInt(&success);
             if(!success){
                 delete r;
                 return false;
             }
-            while(_virtualRemotes.count()<=remoteID)
+            while(_virtualRemotes.count()<remoteID)
                 _virtualRemotes.append(0);
-            _virtualRemotes[remoteID] = r;
+            _virtualRemotes[remoteID-1] = r;
         }
         return true;
     }
     return false;
 }
 
+void VirtualGroup::fastTrigger(QString rName, FTriggerEvent e, const HexData &data)
+{
+    int id = _slaves.indexOf(rName);
+    if(id==-1)
+        return;
+
+    foreach(VirtualRemote* r, _virtualRemotes){
+        if(r->get("remoteID").toInt()==id)
+            r->fastTrigger(e, data);
+    }
+
+    _globalRemote->fastTrigger(e, data);
+}
+
+void VirtualGroup::updateFromPatch()
+{
+    QStringList updatedSlaves = SNetworkModel::ptr()->patch()->virtualToRemoteMap().value(_name);
+    if(_slaves.size() != updatedSlaves.size()){
+        _slaves = updatedSlaves;
+        setNumber("slavesNbr", _slaves.size());
+    }
+
+    _globalRemote->updateVirtualRemote();
+    foreach(VirtualRemote* r, _virtualRemotes)
+        r->updateVirtualRemote();
+}
+
 JSonNode::SetError VirtualGroup::setValue(QString name, QString value)
 {
-    if(name=="slaveNbr"){
-        return setNumber(name, value);
-    }else if(name == "vRemotesNbr"){
+   if(name == "avatarsNbr"){
         bool success = false;
         int nbr = value.toInt(&success);
+        if(!success)
+            return  WrongArg;
         setVirtualRemotesNbr(nbr);
-        return setNumber(value, nbr);
+        return setNumber(name, nbr);
     }
 
     return JSonNode::setValue(name, value);
@@ -517,6 +624,15 @@ JSonNode::SetError VirtualGroup::setValue(QString name, QString value)
 
 bool VirtualGroup::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
 {
+    if(function=="listSlaves"){
+        QString r = 0;
+        for (int i = 0; i < _slaves.size(); ++i) {
+            r+= QString().setNum(i);
+            r+= ":\t" + _slaves.at(i) + "\n";
+        }
+        returnCb(r);
+        return true;
+    }
     return false;
 }
 

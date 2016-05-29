@@ -79,6 +79,17 @@ bool Patch::addEntry(QString rName, QString vName)
     else
         return false;
 
+    VirtualGroup *group = 0;
+    VirtualRemote* vRemote = 0;
+    if(SEventModel::ptr()){
+        group = SEventModel::ptr()->virtualNet()->groupByName(vName);
+        vRemote = SEventModel::ptr()->virtualNet()->remoteByName(vName);
+    }
+    if(group)
+        group->removeSlave(rName);
+    else if(vRemote)
+        vRemote->updateVirtualRemote();
+
     return true;
 }
 
@@ -87,6 +98,7 @@ bool Patch::removeLink(QString rName, QString vName)
     auto rEntry = _remoteToVirtual.find(rName);
     if(rEntry==_remoteToVirtual.end())
         return false;
+    mutex.lock();
     if(rEntry->removeOne(vName)){
         QJsonArray a = _jsonData[rName].toArray();
         for(auto it = a.begin(); it!=a.end(); it++){
@@ -100,8 +112,10 @@ bool Patch::removeLink(QString rName, QString vName)
         else
             _jsonData.remove(rName);
         valueChanged(rName);
-    }else
+    }else{
+        mutex.unlock();
         return false;
+    }
 
     if(rEntry->isEmpty())
         _remoteToVirtual.erase(rEntry);
@@ -109,11 +123,22 @@ bool Patch::removeLink(QString rName, QString vName)
     auto vEntry = _virtualToRemote.find(vName);
     if(vEntry != _virtualToRemote.end())
         vEntry->removeOne(rName);
-    else
+    else{
+        mutex.unlock();
         return false;
+    }
 
     if(vEntry->isEmpty())
         _virtualToRemote.erase(vEntry);
+
+    mutex.unlock();
+
+    VirtualGroup *group = SEventModel::ptr()->virtualNet()->groupByName(vName);
+    VirtualRemote* vRemote = SEventModel::ptr()->virtualNet()->remoteByName(vName);
+    if(group)
+        group->removeSlave(rName);
+    else if(vRemote)
+        vRemote->updateVirtualRemote();
 
     return true;
 }
@@ -140,6 +165,7 @@ bool Patch::removeRemoteLinks(QString rName)
     if(rEntry == _remoteToVirtual.end())
         return false;
 
+    mutex.lock();
     foreach(QString vName, rEntry.value()){
         auto vEntry = _virtualToRemote.find(vName);
         if(vEntry != _virtualToRemote.end()){
@@ -147,11 +173,18 @@ bool Patch::removeRemoteLinks(QString rName)
             if(vEntry->isEmpty())
                 _virtualToRemote.erase(vEntry);
         }
+        VirtualGroup *group = SEventModel::ptr()->virtualNet()->groupByName(vName);
+        VirtualRemote* vRemote = SEventModel::ptr()->virtualNet()->remoteByName(vName);
+        if(group)
+            group->removeSlave(rName);
+        else if(vRemote)
+            vRemote->updateVirtualRemote();
     }
 
     _jsonData.remove(rName);
     valueChanged(rName);
     _remoteToVirtual.erase(rEntry);
+    mutex.unlock();
 
     return true;
 }
@@ -162,6 +195,10 @@ bool Patch::removeVirtualLinks(QString vName)
     if(vEntry == _virtualToRemote.end())
         return false;
 
+    VirtualGroup *group = SEventModel::ptr()->virtualNet()->groupByName(vName);
+    VirtualRemote* vRemote = SEventModel::ptr()->virtualNet()->remoteByName(vName);
+
+    mutex.lock();
     foreach(QString rName, vEntry.value()){
         auto rEntry = _remoteToVirtual.find(rName);
         if(rEntry==_remoteToVirtual.end())
@@ -184,10 +221,17 @@ bool Patch::removeVirtualLinks(QString vName)
                 _jsonData.remove(rName);
             valueChanged(rName);
         }
+
+        if(group)
+            group->removeSlave(rName);
+        else if(vRemote)
+            vRemote->updateVirtualRemote();
+
     }
 
     _virtualToRemote.erase(vEntry);
 
+    mutex.unlock();
     return true;
 }
 
@@ -226,4 +270,78 @@ bool Patch::removeLinks(VirtualRemote *vRemote)
 bool Patch::removeLinks(VirtualGroup *vGroups)
 {
     return removeVirtualLinks(vGroups->name());
+}
+
+void Patch::fastTriggerRemote(QString rName, FTriggerEvent e, const HexData &v)
+{
+    if(!SEventModel::ptr())
+        return;
+
+    QStringList vNames;
+    mutex.lock();
+    auto rEntry = _remoteToVirtual.find(rName);
+    if(rEntry != _remoteToVirtual.end())
+        vNames = rEntry.value();
+    mutex.unlock();
+
+    if(vNames.empty())
+        return;
+
+    SEventModel::ptr()->virtualNet()->fastTrigger(vNames, rName, e, v);
+}
+
+QList<Remote *> Patch::remoteList(QString virtualRemote)
+{
+    if(!SNetworkModel::ptr())
+        return QList<Remote*>();
+
+    QStringList rNames;
+    mutex.lock();
+    auto vEntry = _virtualToRemote.find(virtualRemote);
+    if(vEntry!=_virtualToRemote.end())
+        rNames = vEntry.value();
+    mutex.unlock();
+
+    QList<Remote*> remotes;
+    foreach(QString rName, rNames){
+        Remote* r = SNetworkModel::ptr()->remotes()->byName(rName);
+        if(r)
+            remotes.append(r);
+    }
+    return remotes;
+}
+
+QString eventName(FTriggerEvent e)
+{
+    switch(e){
+    case UP:
+        return "Up";
+    case DOWN:
+        return "Down";
+    case RIGHT:
+        return "Right";
+    case LEFT:
+        return "Left";
+    case ACTION:
+        return "Action";
+    case LED:
+        return "LED";
+    }
+    return "";
+}
+
+FTriggerEvent eventID(QString e)
+{
+    if(e == "Up")
+        return UP;
+    else if(e == "Down")
+        return DOWN;
+    else if(e == "Left")
+        return LEFT;
+    else if (e == "Right")
+        return RIGHT;
+    else if(e == "Action")
+        return ACTION;
+
+    return LED;
 }

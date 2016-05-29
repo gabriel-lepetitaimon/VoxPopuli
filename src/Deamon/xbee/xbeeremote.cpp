@@ -1,7 +1,6 @@
 #include "xbeeremote.h"
 #include "xbeeinterface.h"
 #include "model/networkmodel.h"
-#include "misc.h"
 
 #include <iostream>
 
@@ -52,53 +51,40 @@ void XBeeRemote::handleMessage(std::string cmd)
 {
     switch((uint8_t)cmd[0]){
     case BUTTON_LEFT:
-        remoteModel()->setButtonState(Remote::LEFT, cmd[1]);
+        remoteModel()->setButtonState(BUTTON_LEFT, cmd[1]);
         break;
     case BUTTON_RIGHT:
-        remoteModel()->setButtonState(Remote::RIGHT, cmd[1]);
+        remoteModel()->setButtonState(BUTTON_RIGHT, cmd[1]);
         break;
     case BUTTON_UP:
-        remoteModel()->setButtonState(Remote::UP, cmd[1]);
+        remoteModel()->setButtonState(BUTTON_UP, cmd[1]);
         break;
     case BUTTON_DOWN:
-        remoteModel()->setButtonState(Remote::DOWN, cmd[1]);
+        remoteModel()->setButtonState(BUTTON_DOWN, cmd[1]);
         break;
     case BUTTON_ACTION:
-            remoteModel()->setButtonState(Remote::ACTION, cmd[1]);
+            remoteModel()->setButtonState(BUTTON_ACTION, cmd[1]);
             break;
     default:
         return;
     }
 }
 
-void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::string data)
-{
-    std::vector<uint8_t> hex = hexStrToInt(data);
-    sendMsg(type, hex);
-}
-
-void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+void XBeeRemote::sendMsg(XBEE_MSG_TYPE type, const HexData &data)
 {
     sendTX(prepareMsg(type, data));
 }
 
-void XBeeRemote::safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::string data)
-{
-    std::vector<uint8_t> hex = hexStrToInt(data);
-    safeSendMsg(key, type, hex);
-}
-
-void XBeeRemote::safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+void XBeeRemote::safeSendMsg(std::string key, XBEE_MSG_TYPE type, const HexData &data)
 {
     _safeSendMap[key] = prepareMsg(type, data);
 }
 
-std::string XBeeRemote::prepareMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data)
+std::string XBeeRemote::prepareMsg(XBEE_MSG_TYPE type, const HexData& data)
 {
     std::string cmd;
     cmd+=type;
-    for(size_t i=0; i<data.size(); i++)
-        cmd+=data[i];
+    cmd+=data.strData();
     cmd += FRAME_END;
     return cmd;
 }

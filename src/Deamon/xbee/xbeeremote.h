@@ -6,6 +6,8 @@
 #include <vector>
 #include "xbee/atcmd.h"
 
+#include "misc.h"
+
 class XBeeInterface;
 class Remote;
 
@@ -40,11 +42,9 @@ public:
     void receiveRX(std::string cmd);
     void handleMessage(std::string cmd);
 
-    void sendMsg(XBEE_MSG_TYPE type, std::string data);
-    void sendMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data = std::vector<uint8_t>());
+    void sendMsg(XBEE_MSG_TYPE type, const HexData& data = HexData());
 
-    void safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::string data);
-    void safeSendMsg(std::string key, XBEE_MSG_TYPE type, std::vector<uint8_t> data = std::vector<uint8_t>());
+    void safeSendMsg(std::string key, XBEE_MSG_TYPE type, const HexData& data = HexData());
 
     void checkStatus();
     bool tick();
@@ -55,7 +55,7 @@ public:
     void clearRemoteModel(){_remoteModel = 0;}
 
 protected:
-    std::string prepareMsg(XBEE_MSG_TYPE type, std::vector<uint8_t> data);
+    std::string prepareMsg(XBEE_MSG_TYPE type, const HexData& data);
 };
 
 #endif // XBEEREMOTE_H

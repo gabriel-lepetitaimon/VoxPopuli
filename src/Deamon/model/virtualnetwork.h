@@ -5,6 +5,7 @@
 #include <QMap>
 #include "eventmodel.h"
 #include "eventtrigger.h"
+#include "patch.h"
 
 class VirtualRemote;
 class Event;
@@ -28,6 +29,7 @@ public:
     bool removeGroup(QString name);
 
     void autoGenerateRemote();
+    void fastTrigger(QStringList virtualElements, QString remoteName, FTriggerEvent e, const HexData& data);
 
     EventModel* eventModel() {return _eventModel;}
 
@@ -56,6 +58,12 @@ public:
 
     VirtualNetwork* virtualNet() {return _vNet;}
     static QJsonObject createVirtualRemoteJSon();
+    
+    JSonNode::SetError fastTrigger(FTriggerEvent e, const HexData& data);
+    void sendFastTrigger(FTriggerEvent e, const HexData& data);
+    QList<Remote*> patchedRemotes() const;
+
+    void updateVirtualRemote();
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
@@ -100,21 +108,28 @@ class VirtualGroup: public JSonNode
 {
     Q_OBJECT
     VirtualNetwork* _vNet;
+    QStringList _slaves;
 public:
     VirtualGroup(QString name, VirtualNetwork* virtualNet);
     virtual ~VirtualGroup() {}
 
     VirtualNetwork* virtualNet();
 
-    void setSlavesNbr(int nbr);
-
     VirtualRemote* globalRemote();
     void setVirtualRemotesNbr(int nbr);
     int getVirtualRemoteNbr() const {return _virtualRemotes.size();}
     VirtualRemote* virtualRemote(int id);
 
+    void addSlave(QString slaveName);
+    void removeSlave(QString slaveName);
+    QString slave(int id) const;
+
     static QJsonObject createGroupJSon();
     bool createSubNode(QString name, const QJsonObject& data);
+
+    void fastTrigger(QString rName, FTriggerEvent e, const HexData& data);
+
+    void updateFromPatch();
 
 protected:
     VirtualRemote* _globalRemote;

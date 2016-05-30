@@ -1,0 +1,5 @@
+Removed Pin From Net: NetName=RESET Pin=ArdH2-10
+Removed Pin From Net: NetName=RESET Pin=Arduino-35
+Added Pin To Net: NetName=RESET1 Pin=ArdH2-10
+Added Pin To Net: NetName=RESET1 Pin=Arduino-35
+Added Net: Name=RESET1

@@ -1,0 +1,4 @@
+Removed Pin From Net: NetName=VIN Pin=C1-2
+Added Component: Designator=C2(C1206)
+Added Pin To Net: NetName=UOUT Pin=C1-1
+Added Pin To Net: NetName=VIN Pin=C1-2

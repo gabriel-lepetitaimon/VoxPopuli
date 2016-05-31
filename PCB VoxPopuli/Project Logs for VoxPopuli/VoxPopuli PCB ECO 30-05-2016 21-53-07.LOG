@@ -1,0 +1,109 @@
+Added Component: Designator=ArdH1(HEADER 12)
+Added Component: Designator=ArdH2(HEADER 12)
+Added Component: Designator=Arduino(ARDUINO DIP 2)
+Added Component: Designator=C1(C1206)
+Added Component: Designator=C2(C1206)
+Added Component: Designator=LED1(HEADER 2)
+Added Component: Designator=LED2(HEADER 2)
+Added Component: Designator=LED3(HEADER 2)
+Added Component: Designator=Pow pile(HEADER 2)
+Added Component: Designator=R1(HEADER 2)
+Added Component: Designator=R2(HEADER 2)
+Added Component: Designator=R3(HEADER 2)
+Added Component: Designator=R4(C1206)
+Added Component: Designator=R5(C1206)
+Added Component: Designator=Switch(HEADER 2)
+Added Component: Designator=Xbee(XBEE DIP 2)
+Added Pin To Net: NetName=ON/SLEEP Pin=ArdH1-1
+Added Pin To Net: NetName=BOUT. LEFT Pin=ArdH1-2
+Added Pin To Net: NetName=BOUT. UP Pin=ArdH1-3
+Added Pin To Net: NetName=BOUT. RIGHT Pin=ArdH1-4
+Added Pin To Net: NetName=BOUT. DOWN Pin=ArdH1-5
+Added Pin To Net: NetName=BOUT. ACTION Pin=ArdH1-6
+Added Pin To Net: NetName=R3 Pin=ArdH1-7
+Added Pin To Net: NetName=PIN25 Pin=ArdH1-8
+Added Pin To Net: NetName=PIN24 Pin=ArdH1-9
+Added Pin To Net: NetName=RESET Pin=ArdH1-10
+Added Pin To Net: NetName=RX Pin=ArdH1-11
+Added Pin To Net: NetName=TX Pin=ArdH1-12
+Added Pin To Net: NetName=R1 Pin=ArdH2-1
+Added Pin To Net: NetName=R2 Pin=ArdH2-2
+Added Pin To Net: NetName=MISO Pin=ArdH2-3
+Added Pin To Net: NetName=SCK Pin=ArdH2-4
+Added Pin To Net: NetName=ADC Pin=ArdH2-5
+Added Pin To Net: NetName=A1 Pin=ArdH2-6
+Added Pin To Net: NetName=A2 Pin=ArdH2-7
+Added Pin To Net: NetName=A3 Pin=ArdH2-8
+Added Pin To Net: NetName=VIN Pin=ArdH2-9
+Added Pin To Net: NetName=RESET Pin=ArdH2-10
+Added Pin To Net: NetName=GND Pin=ArdH2-11
+Added Pin To Net: NetName=RAW Pin=ArdH2-12
+Added Pin To Net: NetName=TX Pin=Arduino-21
+Added Pin To Net: NetName=RX Pin=Arduino-22
+Added Pin To Net: NetName=RESET Pin=Arduino-23
+Added Pin To Net: NetName=PIN24 Pin=Arduino-24
+Added Pin To Net: NetName=PIN25 Pin=Arduino-25
+Added Pin To Net: NetName=R3 Pin=Arduino-26
+Added Pin To Net: NetName=BOUT. ACTION Pin=Arduino-27
+Added Pin To Net: NetName=BOUT. DOWN Pin=Arduino-28
+Added Pin To Net: NetName=BOUT. RIGHT Pin=Arduino-29
+Added Pin To Net: NetName=BOUT. UP Pin=Arduino-30
+Added Pin To Net: NetName=BOUT. LEFT Pin=Arduino-31
+Added Pin To Net: NetName=ON/SLEEP Pin=Arduino-32
+Added Pin To Net: NetName=RAW Pin=Arduino-33
+Added Pin To Net: NetName=GND Pin=Arduino-34
+Added Pin To Net: NetName=RESET Pin=Arduino-35
+Added Pin To Net: NetName=VIN Pin=Arduino-36
+Added Pin To Net: NetName=A3 Pin=Arduino-37
+Added Pin To Net: NetName=A2 Pin=Arduino-38
+Added Pin To Net: NetName=A1 Pin=Arduino-39
+Added Pin To Net: NetName=ADC Pin=Arduino-40
+Added Pin To Net: NetName=SCK Pin=Arduino-41
+Added Pin To Net: NetName=MISO Pin=Arduino-42
+Added Pin To Net: NetName=R2 Pin=Arduino-43
+Added Pin To Net: NetName=R1 Pin=Arduino-44
+Added Pin To Net: NetName=CIN Pin=C1-1
+Added Pin To Net: NetName=UOUT Pin=C2-1
+Added Pin To Net: NetName=VIN Pin=C2-2
+Added Pin To Net: NetName=LED1 Pin=LED1-1
+Added Pin To Net: NetName=GND Pin=LED1-2
+Added Pin To Net: NetName=LED2 Pin=LED2-1
+Added Pin To Net: NetName=GND Pin=LED2-2
+Added Pin To Net: NetName=LED3 Pin=LED3-1
+Added Pin To Net: NetName=GND Pin=LED3-2
+Added Pin To Net: NetName=VCC Pin=Pow pile-1
+Added Pin To Net: NetName=GND Pin=Pow pile-2
+Added Pin To Net: NetName=R1 Pin=R1-1
+Added Pin To Net: NetName=LED1 Pin=R1-2
+Added Pin To Net: NetName=R2 Pin=R2-1
+Added Pin To Net: NetName=LED2 Pin=R2-2
+Added Pin To Net: NetName=R3 Pin=R3-1
+Added Pin To Net: NetName=LED3 Pin=R3-2
+Added Pin To Net: NetName=VIN Pin=R4-1
+Added Pin To Net: NetName=ADC Pin=R4-2
+Added Pin To Net: NetName=ADC Pin=R5-1
+Added Pin To Net: NetName=GND Pin=R5-2
+Added Pin To Net: NetName=CIN Pin=Switch-1
+Added Pin To Net: NetName=VCC Pin=Switch-2
+Added Pin To Net: NetName=VIN Pin=Xbee-1
+Added Pin To Net: NetName=RX Pin=Xbee-2
+Added Pin To Net: NetName=TX Pin=Xbee-3
+Added Pin To Net: NetName=GND Pin=Xbee-10
+Added Pin To Net: NetName=ON/SLEEP Pin=Xbee-13
+Added Member To Class: ClassName=VoxPopuli Member=Component ArdH1 Header 12
+Added Member To Class: ClassName=VoxPopuli Member=Component ArdH2 Header 12
+Added Member To Class: ClassName=VoxPopuli Member=Component Arduino Arduino Mini Pro
+Added Member To Class: ClassName=VoxPopuli Member=Component C1 Cap Semi
+Added Member To Class: ClassName=VoxPopuli Member=Component C2 Cap Semi
+Added Member To Class: ClassName=VoxPopuli Member=Component LED1 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component LED2 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component LED3 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component Pow pile Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component R1 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component R2 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component R3 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component R4 Res1
+Added Member To Class: ClassName=VoxPopuli Member=Component R5 Res1
+Added Member To Class: ClassName=VoxPopuli Member=Component Switch Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component Xbee
+Added Room: Name=VoxPopuli

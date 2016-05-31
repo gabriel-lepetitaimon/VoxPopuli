@@ -1,0 +1,7 @@
+Added Component: Designator=U(KTT5_N)
+Added Pin To Net: NetName=UIN Pin=U-1
+Added Pin To Net: NetName=UOUT Pin=U-2
+Added Pin To Net: NetName=GND Pin=U-3
+Added Pin To Net: NetName=UOUT Pin=U-4
+Added Pin To Net: NetName=GND Pin=U-5
+Added Member To Class: ClassName=VoxPopuli Member=Component U TL2575-33IKTTR

@@ -1,0 +1,5 @@
+Remove Pin=C1-1 From Net=CIN
+Remove Pin=C2-1 From Net=UOUT
+Remove Pin=C2-2 From Net=VIN
+Add Pin To Net: Pin=C2-1 Old Net=UOUT New Net=UOUT
+Add Pin To Net: Pin=C2-2 Old Net=VIN New Net=VIN

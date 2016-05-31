@@ -1,0 +1,80 @@
+Removed Pin From Net: NetName=GND Pin=P1-1
+Removed Pin From Net: NetName=GND Pin=P2-1
+Removed Pin From Net: NetName=GND Pin=P3-1
+Removed Pin From Net: NetName=VCC Pin=P5-2
+Removed Pin From Net: NetName=GND Pin=R3-1
+Removed Pin From Net: NetName=VCC Pin=U-1
+Removed Pin From Net: NetName=VIN Pin=U-2
+Removed Pin From Net: NetName=VIN Pin=U-4
+Removed Member From Class: ClassName=VoxPopuli Member=P1
+Change Component DesignItemId : Designator=R1 Old DesignItemId=Res1 New DesignItemId=Header 2
+Change Component DesignItemId : Designator=R2 Old DesignItemId=Res1 New DesignItemId=Header 2
+Change Component DesignItemId : Designator=R3 Old DesignItemId=Res1 New DesignItemId=Header 2
+Change Component Footprint: Designator=R1 Old Footprint=AXIAL-0.3 New Footprint=HDR1X2
+Change Component Footprint: Designator=R2 Old Footprint=AXIAL-0.3 New Footprint=HDR1X2
+Change Component Footprint: Designator=R3 Old Footprint=AXIAL-0.3 New Footprint=HDR1X2
+Change Component Comment : Designator=R1 Old Comment=Res1 New Comment=Header 2
+Change Component Comment : Designator=R2 Old Comment=Res1 New Comment=Header 2
+Change Component Comment : Designator=R3 Old Comment=Res1 New Comment=Header 2
+Change Component Designator: OldDesignator=A NewDesignator=Arduino
+Change Component Designator: OldDesignator=P2 NewDesignator=LED2
+Change Component Designator: OldDesignator=P3 NewDesignator=LED3
+Change Component Designator: OldDesignator=P5 NewDesignator=Pow pile
+Change Component Designator: OldDesignator=X NewDesignator=Xbee
+Added Component: Designator=C?(C1206)
+Added Component: Designator=LED1(HDR1X2)
+Added Component: Designator=Switch(HDR1X2)
+Added Pin To Net: NetName=VIN Pin=C?-2
+Added Pin To Net: NetName=GND Pin=LED1-2
+Added Pin To Net: NetName=GND Pin=LED2-2
+Added Pin To Net: NetName=VCC Pin=Switch-1
+Change Net Name : Old Net Name=NetA_21 New Net Name=NetArduino_21
+Change Net Name : Old Net Name=NetA_22 New Net Name=NetArduino_22
+Change Net Name : Old Net Name=NetA_23 New Net Name=NetArduino_23
+Change Net Name : Old Net Name=NetA_24 New Net Name=NetArduino_24
+Change Net Name : Old Net Name=NetA_25 New Net Name=NetArduino_25
+Change Net Name : Old Net Name=NetA_27 New Net Name=NetArduino_27
+Change Net Name : Old Net Name=NetA_28 New Net Name=NetArduino_28
+Change Net Name : Old Net Name=NetA_29 New Net Name=NetArduino_29
+Change Net Name : Old Net Name=NetA_30 New Net Name=NetArduino_30
+Change Net Name : Old Net Name=NetA_31 New Net Name=NetArduino_31
+Change Net Name : Old Net Name=NetA_32 New Net Name=NetArduino_32
+Change Net Name : Old Net Name=NetA_33 New Net Name=NetArduino_33
+Change Net Name : Old Net Name=NetA_35 New Net Name=NetArduino_35
+Change Net Name : Old Net Name=NetA_37 New Net Name=NetArduino_37
+Change Net Name : Old Net Name=NetA_38 New Net Name=NetArduino_38
+Change Net Name : Old Net Name=NetA_39 New Net Name=NetArduino_39
+Change Net Name : Old Net Name=NetA_41 New Net Name=NetArduino_41
+Change Net Name : Old Net Name=NetA_42 New Net Name=NetArduino_42
+Added Pin To Net: NetName=NetArduino_26 Pin=Arduino-26
+Added Pin To Net: NetName=NetArduino_26 Pin=P0-7
+Added Pin To Net: NetName=NetArduino_26 Pin=R3-1
+Added Net: Name=NetArduino_26
+Added Pin To Net: NetName=NetArduino_43 Pin=Arduino-43
+Added Pin To Net: NetName=NetArduino_43 Pin=P4-2
+Added Pin To Net: NetName=NetArduino_43 Pin=R2-1
+Added Net: Name=NetArduino_43
+Added Pin To Net: NetName=NetArduino_44 Pin=Arduino-44
+Added Pin To Net: NetName=NetArduino_44 Pin=P4-1
+Added Pin To Net: NetName=NetArduino_44 Pin=R1-1
+Added Net: Name=NetArduino_44
+Added Pin To Net: NetName=NetC?_1 Pin=C?-1
+Added Pin To Net: NetName=NetC?_1 Pin=U-2
+Added Pin To Net: NetName=NetC?_1 Pin=U-4
+Added Net: Name=NetC?_1
+Added Pin To Net: NetName=NetLED1_1 Pin=LED1-1
+Added Pin To Net: NetName=NetLED1_1 Pin=R1-2
+Added Net: Name=NetLED1_1
+Added Pin To Net: NetName=NetLED2_1 Pin=LED2-1
+Added Pin To Net: NetName=NetLED2_1 Pin=R2-2
+Added Net: Name=NetLED2_1
+Added Pin To Net: NetName=NetLED3_1 Pin=LED3-1
+Added Pin To Net: NetName=NetLED3_1 Pin=R3-2
+Added Net: Name=NetLED3_1
+Added Pin To Net: NetName=NetPow pile_2 Pin=Pow pile-2
+Added Pin To Net: NetName=NetPow pile_2 Pin=Switch-2
+Added Pin To Net: NetName=NetPow pile_2 Pin=U-1
+Added Net: Name=NetPow pile_2
+Added Member To Class: ClassName=VoxPopuli Member=Component C? Cap Semi
+Added Member To Class: ClassName=VoxPopuli Member=Component LED1 Header 2
+Added Member To Class: ClassName=VoxPopuli Member=Component Switch Header 2

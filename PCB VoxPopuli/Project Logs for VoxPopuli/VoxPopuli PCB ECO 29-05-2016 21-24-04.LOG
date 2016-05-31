@@ -1,0 +1,34 @@
+Removed Pin From Net: NetName=VCC Pin=Switch-1
+Added Pin To Net: NetName=VCC Pin=Pow pile-2
+Added Pin To Net: NetName=VCC Pin=Switch-2
+Change Net Name : Old Net Name=NetArdH1_1 New Net Name=ON/SLEEP
+Change Net Name : Old Net Name=NetArdH1_2 New Net Name=BOUT. LEFT
+Change Net Name : Old Net Name=NetArdH1_3 New Net Name=BOUT. UP
+Change Net Name : Old Net Name=NetArdH1_4 New Net Name=BOUT. RIGHT
+Change Net Name : Old Net Name=NetArdH1_5 New Net Name=BOUT. DOWN
+Change Net Name : Old Net Name=NetArdH1_6 New Net Name=BOUT. ACTION
+Change Net Name : Old Net Name=NetArdH1_7 New Net Name=R3
+Change Net Name : Old Net Name=NetArdH1_8 New Net Name=PIN25
+Change Net Name : Old Net Name=NetArdH1_9 New Net Name=PIN24
+Change Net Name : Old Net Name=NetArdH1_11 New Net Name=RX
+Change Net Name : Old Net Name=NetArdH1_12 New Net Name=TX
+Change Net Name : Old Net Name=NetArdH2_1 New Net Name=R1
+Change Net Name : Old Net Name=NetArdH2_2 New Net Name=R2
+Change Net Name : Old Net Name=NetArdH2_3 New Net Name=MISO
+Change Net Name : Old Net Name=NetArdH2_4 New Net Name=SCK
+Change Net Name : Old Net Name=NetArdH2_6 New Net Name=A1
+Change Net Name : Old Net Name=NetArdH2_7 New Net Name=A2
+Change Net Name : Old Net Name=NetArdH2_8 New Net Name=A3
+Change Net Name : Old Net Name=NetArdH2_12 New Net Name=RAW
+Change Net Name : Old Net Name=NetC1_1 New Net Name=UOUT
+Change Net Name : Old Net Name=NetLED1_1 New Net Name=LED1
+Change Net Name : Old Net Name=NetLED2_1 New Net Name=LED2
+Change Net Name : Old Net Name=NetLED3_1 New Net Name=LED3
+Added Pin To Net: NetName=RESET Pin=ArdH1-10
+Added Pin To Net: NetName=RESET Pin=ArdH2-10
+Added Pin To Net: NetName=RESET Pin=Arduino-23
+Added Pin To Net: NetName=RESET Pin=Arduino-35
+Added Net: Name=RESET
+Added Pin To Net: NetName=UIN Pin=Switch-1
+Added Pin To Net: NetName=UIN Pin=U-1
+Added Net: Name=UIN

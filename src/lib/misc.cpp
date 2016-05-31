@@ -78,7 +78,7 @@ uint8_t hexToInt(char value){
     return 0;
 }
 
-string intToHexStr(vector<uint8_t> v){
+string intToHexStr(const vector<uint8_t>& v){
     string str="";
     for (size_t i = 0; i < v.size(); ++i) {
         uint8_t d1 = v[i]/16;
@@ -90,9 +90,7 @@ string intToHexStr(vector<uint8_t> v){
     return str;
 }
 
-vector<uint8_t> hexStrToInt(string str){
-    if(str.length()%2)
-        str+='0';
+vector<uint8_t> hexStrToInt(const string& str){
     vector<uint8_t> r;
     for(size_t i=0; i<str.length()/2; i++){
         uint8_t d = 0;
@@ -103,3 +101,165 @@ vector<uint8_t> hexStrToInt(string str){
 
     return r;
 }
+
+/********************************************
+ *                 Hex Data                 *
+ *******************************************/
+
+
+HexData::HexData()
+{
+    _data = new std::vector<uint8_t>();
+}
+
+HexData::HexData(string data)
+{
+    _data = new std::vector<uint8_t>(data.size());
+    for(size_t i=0; i<data.size(); i++)
+        (*_data)[i] = (uint8_t)data.at(i);
+}
+
+HexData::HexData(std::vector<uint8_t> data)
+{
+    _data = new std::vector<uint8_t>(data);
+}
+
+HexData::HexData(uint8_t data)
+{
+    _data = new std::vector<uint8_t>(1, data);
+}
+
+HexData::HexData(const HexData &data)
+{
+    _data = new std::vector<uint8_t>(*(data._data));
+}
+
+HexData::HexData(std::vector<uint8_t> *emplace)
+    :_data(emplace)
+{
+}
+
+HexData::~HexData()
+{
+    delete _data;
+}
+
+HexData HexData::fromHexStr(string data)
+{
+    return HexData(hexStrToInt(data));
+}
+
+string HexData::toHexStr() const
+{
+    return intToHexStr(*_data);
+}
+
+
+string HexData::strData() const
+{
+    string r;
+    for(size_t i=0; i<_data->size(); i++)
+        r+=(*_data)[i];
+    return r;
+}
+
+unsigned int HexData::toInt() const
+{
+    unsigned int r = 0;
+    toInt(r);
+    return r;
+}
+
+bool HexData::toInt(unsigned int &r) const
+{
+    if(size()>32)
+        return false;
+    r = 0;
+    for(size_t i = _data->size()-1; i+1>0; i--){
+        r *= 256;
+        r += _data->at(i);
+    }
+    return true;
+}
+
+const std::vector<uint8_t>& HexData::data() const
+{
+    return *_data;
+}
+
+void HexData::prepend(const std::vector<uint8_t> &data)
+{
+    std::vector<uint8_t>* r = new std::vector<uint8_t>(data.size()+_data->size());
+    for (size_t i = 0; i < data.size(); ++i)
+        (*r)[i] = data[i];
+    for (size_t i = 0; i < _data->size(); ++i)
+        (*r)[i+data.size()] = data[i];
+
+    delete _data;
+    _data = r;
+}
+
+void HexData::prepend(uint8_t data)
+{
+    _data->insert(_data->begin(), data);
+}
+
+void HexData::append(const std::vector<uint8_t> &data)
+{
+    _data->reserve(_data->size()+data.size());
+    for (size_t i = 0; i < data.size(); ++i)
+        _data->insert(_data->end(), data[i]);
+}
+
+void HexData::append(uint8_t data)
+{
+    _data->insert(_data->end(), data);
+}
+
+HexData HexData::operator+=(const HexData &data)
+{
+    append(*(data._data));
+    return *this;
+}
+
+HexData HexData::operator+=(const std::vector<uint8_t> &data)
+{
+    append(data);
+    return *this;
+}
+
+HexData HexData::operator+=(const string &data)
+{
+    append(data);
+    return *this;
+}
+
+HexData HexData::operator+=(uint8_t data)
+{
+    append(data);
+    return *this;
+}
+
+HexData HexData::operator+(const HexData &data) const
+{
+    std::vector<uint8_t>* r = new std::vector<uint8_t>(data.size()+_data->size());
+    for (size_t i = 0; i < _data->size(); ++i)
+        (*r)[i+_data->size()] = (*_data)[i];
+    for (size_t i = 0; i < data.size(); ++i)
+        (*r)[i] = data[i];
+
+    return HexData(r);
+}
+
+HexData HexData::operator+(uint8_t data) const
+{
+    std::vector<uint8_t>* r = new std::vector<uint8_t>(_data->size()+1);
+    for (size_t i = 0; i < _data->size(); ++i)
+        (*r)[i+_data->size()] = (*_data)[i];
+    (*r)[_data->size()] = data;
+    return HexData(r);
+}
+
+
+
+

@@ -2,6 +2,7 @@
 #include "telnet/telnetserver.h"
 #include "xbee/xbeeinterface.h"
 #include "model/networkmodel.h"
+#include "model/eventmodel.h"
 
 int main(int argc, char *argv[])
 {
@@ -10,6 +11,7 @@ int main(int argc, char *argv[])
 
     SXBeeInterface::init();
     SNetworkModel::init();
+    SEventModel::init();
     STelnetServer::init();
 
     SXBeeInterface::ptr()->start();
@@ -20,6 +22,7 @@ int main(int argc, char *argv[])
     SXBeeInterface::ptr()->wait();
 
     STelnetServer::clean();
+    SEventModel::clean();
     SNetworkModel::clean();
     SXBeeInterface::clean();
 

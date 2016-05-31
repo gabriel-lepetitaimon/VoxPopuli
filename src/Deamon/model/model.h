@@ -40,7 +40,7 @@ public:
     JSonNode*           parentNode()    const {return _parentNode;}
 
     QString             address() const;
-    QVariant get(const QString& name);
+    QVariant get(const QString& name) const;
     bool getToString(const QString& name, QString &result) const;
 
     void printOut();
@@ -72,8 +72,10 @@ protected:
     SetError setNumber(QString name, double value);
     SetError setBool(QString name, QString value);
     SetError setBool(QString name, bool value);
+    virtual SetError parseArray(QString name, QStringList value);
+    void valueChanged(QString name);
 
-    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){}) {return false;}
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){});
     void printOut(QString msg);
 
     bool rename(QString name);
@@ -85,8 +87,6 @@ protected:
 
 private:
     QList<JSonNode*> _subnodes;
-
-    void valueChanged(QString name);
 };
 
 
@@ -99,6 +99,7 @@ public:
     JSonNode *nodeByAddress(QString address);
     virtual ~JSonModel();
 
+    void init();
 
 public slots:
     bool loadFile(QString path);
@@ -109,7 +110,6 @@ public slots:
 
 protected:
     explicit JSonModel(QString name);
-    void initModel();
     void updateParentJSon();
 
 protected slots:

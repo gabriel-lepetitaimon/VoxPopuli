@@ -6,6 +6,7 @@
 #include "model.h"
 #include "singleton.h"
 #include "xbee/xbeeremote.h"
+#include "patch.h"
 
 class NetworkModel;
 typedef singleton<NetworkModel> SNetworkModel;
@@ -20,6 +21,7 @@ public:
 
     void setXbeeUsbPort(std::string port);
     RemoteList*     remotes()   {return _remotes;}
+    Patch*          patch()     {return _patch;}
 
     bool createSubNode(QString name, const QJsonObject& data);
 
@@ -28,6 +30,7 @@ protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
     RemoteList* _remotes;
+    Patch* _patch;
 };
 
 
@@ -43,6 +46,8 @@ public:
 
     Remote* byName(QString name);
     Remote* byAddr(QString addr);
+
+    QList<Remote*>& remotes() {return _remotes;}
 
 public slots:
     bool addRemote(QString address);
@@ -62,28 +67,25 @@ class Remote: public JSonNode
 
 public:
 
-    enum Button{
-        TOP,
-        BOTTOM,
-        RIGHT,
-        LEFT,
-        CENTER
-    };
-
     Remote(QString name, QString mac, RemoteList* list);
     virtual ~Remote();
 
     static QJsonObject createRemoteJSon(QString address);
-    void setButtonState(Button b, bool pressed);
+    void setButtonState(XBEE_MSG_TYPE b, bool pressed);
     void setSignalStrength(int dB);
 
     QString macAddress() const {return _jsonData.value("MAC").toString("");}
     XBeeRemote* remote();
+
+    SetError fastTrigger(FTriggerEvent e, const HexData& v);
 
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
 
 };
+
+
+
 
 #endif // NETWORKMODEL_H

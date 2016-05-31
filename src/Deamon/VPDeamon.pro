@@ -25,7 +25,11 @@ SOURCES += VPDeamon.cpp \
     model/model.cpp \
     model/networkmodel.cpp\
     $$SRC/lib/misc.cpp \
-    xbee/xbeeremote.cpp
+    xbee/xbeeremote.cpp \
+    model/eventmodel.cpp \
+    model/virtualnetwork.cpp \
+    model/eventtrigger.cpp \
+    model/patch.cpp
 
 HEADERS += \
     telnet/telnetserver.h \
@@ -35,13 +39,17 @@ HEADERS += \
     model/networkmodel.h\
     $$SRC/lib/singleton.h\
     $$SRC/lib/misc.h \
-    xbee/xbeeremote.h
+    xbee/xbeeremote.h \
+    model/eventmodel.h \
+    model/virtualnetwork.h \
+    model/eventtrigger.h \
+    model/patch.h
 
 
     
 ### LIBRAIRIES ###
 INCLUDEPATH += $$SRC/lib
-LIBS += -ltelnet
+LIBS += -ltelnet -lrtmidi -lX11 -lXtst
 include($$LIB/XBee/XBee.pri)
 
 RESOURCES += \

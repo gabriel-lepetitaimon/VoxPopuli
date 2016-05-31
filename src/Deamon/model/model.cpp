@@ -1,6 +1,6 @@
 #include "model.h"
 #include <QDir>
-
+#include <QJsonArray>
 #include <QDebug>
 
 
@@ -10,7 +10,7 @@ JSonNode::JSonNode(QString name, JSonNode *parent, const JSonNodeFlag& flags )
 
 }
 
-QVariant JSonNode::get(const QString &name)
+QVariant JSonNode::get(const QString &name) const
 {
     return _jsonData.value(name).toVariant();
 }
@@ -30,6 +30,9 @@ bool JSonNode::getToString(const QString &name, QString &result) const
     QVariant v = o.toVariant();
     if(!v.isValid() || v.isNull())
         return false;
+
+    QList<QVariant> l;
+
     switch(v.type()){
     case QVariant::Bool:
         result = v.toBool()?"true":"false";
@@ -39,6 +42,25 @@ bool JSonNode::getToString(const QString &name, QString &result) const
         break;
     case QVariant::String:
         result = '"'+v.toString()+'"';
+        break;
+    case QVariant::List:
+         l = v.toList();
+         if(l.isEmpty()){
+             result = "[]";
+             return true;
+         }
+        result = '[';
+        foreach(QVariant var, l){
+            if(var.type() == QVariant::Bool)
+                result += var.toBool()?"true":"false";
+            else if(var.type() == QVariant::Double)
+                result += QString().setNum(var.toDouble());
+            else if(var.type() == QVariant::String)
+                result += '"'+var.toString()+'"';
+            result+=", ";
+        }
+        result.remove(result.size()-2, 2);
+        result+=']';
         break;
     default:
         return false;
@@ -121,6 +143,16 @@ JSonNode::SetError JSonNode::setBool(QString name, bool value)
     return NoError;
 }
 
+JSonNode::SetError JSonNode::parseArray(QString name, QStringList )
+{
+    return _jsonData.contains(name)?ReadOnly:DoesNotExist;
+}
+
+bool JSonNode::execFunction(QString , QStringList , const std::function<void (QString)> &)
+{
+    return false;
+}
+
 QString JSonNode::print() const
 {
     QString r = "{\n";
@@ -155,11 +187,11 @@ bool JSonNode::rename(QString name)
     if(_parentNode->_jsonData.contains(name))
         return false;
 
+    printOut("renamed \""+name+"\"");
+
     _parentNode->_jsonData.remove(_name);
     _name = name;
     updateParentJSon();
-
-    printOut("renamed \""+name+"\"");
 
     return true;
 }
@@ -223,6 +255,10 @@ QString JSonNode::address() const
 
 bool JSonNode::populateNode(const QJsonObject& data)
 {
+
+    if(_name.contains(' '))
+        return false;
+
     for(auto it = data.begin(); it!=data.end(); it++){
         QString k = it.key();
         QJsonValue v = it.value();
@@ -235,6 +271,20 @@ bool JSonNode::populateNode(const QJsonObject& data)
                 }
                 return false;
             }
+        }else if(v.isArray()){
+            QJsonArray array = v.toArray();
+            QStringList r;
+            for(int i=0; i<array.size(); i++){
+                QJsonValue itV = array.at(i);
+                if(itV.isString())
+                    r+= itV.toString();
+                else if(itV.isBool())
+                    r+= itV.toBool()?"true":"false";
+                else if(itV.isDouble())
+                    r+= QString().setNum(v.toDouble());
+            }
+            parseArray(k, r);
+
         }else if(v.isBool())
             setValue(k, v.toBool()?"true":"false");
         else if(v.isString())
@@ -271,7 +321,9 @@ void JSonNode::addSubNode(JSonNode *node)
 {
     _subnodes.append(node);
     _jsonData[node->name()] = node->_jsonData;
+    printOut('.'+node->name()+" added");
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
+    node->printOut();
 }
 
 void JSonNode::removeSubNode(JSonNode *node)
@@ -419,7 +471,7 @@ JSonNode *JSonModel::nodeByAddress(QString address)
     return n;
 }
 
-void JSonModel::initModel()
+void JSonModel::init()
 {
     initFile();
     connect(&_watch, SIGNAL(fileChanged(QString)), this, SLOT(parseJSonFile()));

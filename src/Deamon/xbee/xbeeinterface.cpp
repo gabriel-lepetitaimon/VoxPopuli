@@ -1,6 +1,5 @@
-#include "xbeeinterface.h"
-
 #define XBEE_CMD_REQUEST_TABLESIZE	3
+#include "xbeeinterface.h"
 
 #include <string.h>
 #include <vector>
@@ -131,7 +130,7 @@ bool XBeeInterface::tryToConnectOnPort(std::string port)
 
 bool XBeeInterface::initialize()
 {
-    int init = 0;
+    int init = 1;
 
     _mac.clear();
     for(int i=0;i<8;i++)
@@ -141,6 +140,7 @@ bool XBeeInterface::initialize()
         xbee_dev_tick(&_xbee);
         msleep(200);
     }
+
     return true;
 }
 
@@ -160,20 +160,32 @@ void XBeeInterface::standardRun()
             if(_scanNeeded)
                 scanNetwork();
             else{
-                _scanNeeded = true;
+                //_scanNeeded = true;
                 for (size_t i = 0; i < _remotes.size(); ++i) {
                     _remotes.at(i).checkStatus();
                 }
             }
         }
 
-
         xbee_dev_tick(&_xbee);
+
+        if(_fastCycle){
+            _fastCycle = false;
+           // continue;
+        }
+
+        for(size_t i=0; i<_remotes.size(); i++){
+            if(_remotes[i].tick())
+                break;
+        }
+
+
         if(_frameStep==5*FRAMERATE)
             _frameStep = 0;
         else
             _frameStep++;
-        msleep(1000/FRAMERATE);
+        msleep(2500/FRAMERATE);
+
     }
 
     _frameStep = -1;
@@ -268,7 +280,7 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, v
     xbee_cmd_set_param_bytes(c, args.data(), args.size());
 
     xbee_cmd_set_flags(c, XBEE_CMD_FLAG_REMOTE);
-
+    _fastCycle = true;
     return c;
 }
 
@@ -291,6 +303,9 @@ bool XBeeInterface::handleScanResponse(std::vector<uint8_t> response)
         return false;
     std::vector<uint8_t> addr({response[2],response[3],response[4],response[5],response[6],response[7],response[8],response[9]});
     std::vector<XBeeRemote>& remotes= SXBeeInterface::ptr()->_remotes;
+
+    if(addr == SXBeeInterface::ptr()->_mac)
+        return false;
 
     for (size_t i = 0; i < remotes.size(); ++i)
         if(remotes[i].address()==addr)
@@ -322,8 +337,8 @@ bool XBeeInterface::removeRemote(std::vector<uint8_t> addr)
         if(it->address()==addr){
             _remotes.erase(it);
             QMetaObject::invokeMethod(SNetworkModel::ptr()->remotes(), "removeRemote", Q_ARG(QString, QString::fromStdString(intToHexStr(addr))) );
-            return true;
             qWarning()<<"remote removed";
+            return true;
         }
     }
     return false;
@@ -351,6 +366,8 @@ bool XBeeInterface::sendRemoteTX(std::string cmd, const uint8_t dest[])
 
     header.push_back(0x00);         //Broadcast radius
     header.push_back(0x00);         //Options
+
+    _fastCycle = true;
 
     return !xbee_frame_write(&_xbee, header.data(), header.size(), cmd.data(), cmd.length(), XBEE_DEV_FLAG_NONE);
 }

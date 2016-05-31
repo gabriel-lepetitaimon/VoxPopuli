@@ -49,7 +49,7 @@ HEADERS += \
     
 ### LIBRAIRIES ###
 INCLUDEPATH += $$SRC/lib
-LIBS += -ltelnet -lrtmidi
+LIBS += -ltelnet -lrtmidi -lX11 -lXtst
 include($$LIB/XBee/XBee.pri)
 
 RESOURCES += \

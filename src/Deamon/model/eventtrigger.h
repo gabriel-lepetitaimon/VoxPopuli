@@ -16,12 +16,13 @@ class EventTrigger : public QObject
 
     QString _name;
     bool _inEvent;
-    QMap<QString, EventCb> _callbacks;
+    QMap<QString, EventCb*> _callbacks;
 
     QMutex mutex;
 
 public:
     explicit EventTrigger(QString name, bool inEvent, QObject* parent=0);
+    ~EventTrigger();
     QString name() const {return _name;}
     QStringList definitions() const;
     bool isInEvent() const {return _inEvent;}
@@ -34,6 +35,11 @@ public slots:
     void addEvent(QString definition, EventCb cb);
     void addEvent(QString definition, SimplifiedEventCb cb);
     bool removeEvent(QString definition);
+
+    void updateEventTrigger(QString eventType="");
+
+protected:
+    bool updateEventTrigger(QMap<QString, EventCb*>::iterator it);
 
 };
 

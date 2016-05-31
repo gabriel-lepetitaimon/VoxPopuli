@@ -13,6 +13,7 @@ public:
         if(_singleton)
             return false;
         _singleton = new T();
+        _singleton->init();
         return true;
     }
     static void clean(){

@@ -187,11 +187,11 @@ bool JSonNode::rename(QString name)
     if(_parentNode->_jsonData.contains(name))
         return false;
 
+    printOut("renamed \""+name+"\"");
+
     _parentNode->_jsonData.remove(_name);
     _name = name;
     updateParentJSon();
-
-    printOut("renamed \""+name+"\"");
 
     return true;
 }
@@ -322,8 +322,8 @@ void JSonNode::addSubNode(JSonNode *node)
     _subnodes.append(node);
     _jsonData[node->name()] = node->_jsonData;
     printOut('.'+node->name()+" added");
-    node->printOut();
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
+    node->printOut();
 }
 
 void JSonNode::removeSubNode(JSonNode *node)
@@ -471,7 +471,7 @@ JSonNode *JSonModel::nodeByAddress(QString address)
     return n;
 }
 
-void JSonModel::initModel()
+void JSonModel::init()
 {
     initFile();
     connect(&_watch, SIGNAL(fileChanged(QString)), this, SLOT(parseJSonFile()));

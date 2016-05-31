@@ -240,11 +240,11 @@ QJsonObject VirtualRemote::createVirtualRemoteJSon()
 {
     QJsonObject o;
     o.insert("LED", 0);
-    o.insert("Up", "up");
-    o.insert("Down", "up");
-    o.insert("Left", "up");
-    o.insert("Right", "up");
-    o.insert("Action", "up");
+    o.insert("Up", "NA");
+    o.insert("Down", "NA");
+    o.insert("Left", "NA");
+    o.insert("Right", "NA");
+    o.insert("Action", "NA");
     o.insert("State", "active");
 
     o.insert("EventUp", Event::createEventJSon());
@@ -253,6 +253,25 @@ QJsonObject VirtualRemote::createVirtualRemoteJSon()
     o.insert("EventRight", Event::createEventJSon());
     o.insert("EventAction", Event::createEventJSon());
     return o;
+}
+
+void VirtualRemote::updateVirtualRemote()
+{
+    QList<Remote*> remotes;
+    if(remotes.isEmpty()){
+        // ---  RESET  ---
+        setString("Up",     "NA");
+        setString("Down",   "NA");
+        setString("Left",   "NA");
+        setString("Right",  "NA");
+        setString("Action", "NA");
+    }else{
+        setString("Up", remotes.first()->get("Up").toString());
+        setString("Down", remotes.first()->get("Down").toString());
+        setString("Left", remotes.first()->get("Left").toString());
+        setString("Right", remotes.first()->get("Right").toString());
+        setString("Action", remotes.first()->get("Active").toString());
+    }
 }
 
 JSonNode::SetError VirtualRemote::fastTrigger(FTriggerEvent e, const HexData &data)
@@ -322,25 +341,6 @@ JSonNode::SetError VirtualRemote::setValue(QString name, QString value)
     }
 
     return JSonNode::setValue(name, value);
-}
-
-void VirtualRemote::updateVirtualRemote()
-{
-    QList<Remote*> remotes;
-    if(remotes.isEmpty()){
-        // ---  RESET  ---
-        setString("Up",     "NA");
-        setString("Down",   "NA");
-        setString("Left",   "NA");
-        setString("Right",  "NA");
-        setString("Active", "NA");
-    }else{
-        setString("Up", remotes.first()->get("Up").toString());
-        setString("Down", remotes.first()->get("Down").toString());
-        setString("Left", remotes.first()->get("Left").toString());
-        setString("Right", remotes.first()->get("Right").toString());
-        setString("Active", remotes.first()->get("Active").toString());
-    }
 }
 
 

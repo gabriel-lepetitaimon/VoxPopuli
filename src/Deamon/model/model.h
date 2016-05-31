@@ -99,6 +99,7 @@ public:
     JSonNode *nodeByAddress(QString address);
     virtual ~JSonModel();
 
+    void init();
 
 public slots:
     bool loadFile(QString path);
@@ -109,7 +110,6 @@ public slots:
 
 protected:
     explicit JSonModel(QString name);
-    void initModel();
     void updateParentJSon();
 
 protected slots:

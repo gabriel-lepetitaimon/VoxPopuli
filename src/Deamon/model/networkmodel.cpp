@@ -8,7 +8,6 @@ NetworkModel::NetworkModel()
 {
     _remotes = new RemoteList(this);
     _patch = new Patch(this);
-    initModel();
 }
 
 void NetworkModel::setXbeeUsbPort(std::string port)
@@ -198,7 +197,7 @@ void Remote::setButtonState(XBEE_MSG_TYPE b, bool pressed)
         return;
     }
 
-    fastTrigger(e, pressed?1:0);
+     fastTrigger(e, pressed?1:0);
     setString(bName, pressed?"down":"up");
 }
 

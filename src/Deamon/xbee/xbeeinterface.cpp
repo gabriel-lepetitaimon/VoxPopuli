@@ -130,7 +130,7 @@ bool XBeeInterface::tryToConnectOnPort(std::string port)
 
 bool XBeeInterface::initialize()
 {
-    int init = 0;
+    int init = 1;
 
     _mac.clear();
     for(int i=0;i<8;i++)
@@ -140,6 +140,7 @@ bool XBeeInterface::initialize()
         xbee_dev_tick(&_xbee);
         msleep(200);
     }
+
     return true;
 }
 
@@ -165,7 +166,6 @@ void XBeeInterface::standardRun()
                 }
             }
         }
-
 
         xbee_dev_tick(&_xbee);
 

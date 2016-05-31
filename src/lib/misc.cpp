@@ -244,10 +244,19 @@ HexData HexData::operator+(const HexData &data) const
 {
     std::vector<uint8_t>* r = new std::vector<uint8_t>(data.size()+_data->size());
     for (size_t i = 0; i < _data->size(); ++i)
-        (*r)[i+data.size()] = data[i];
+        (*r)[i+_data->size()] = (*_data)[i];
     for (size_t i = 0; i < data.size(); ++i)
         (*r)[i] = data[i];
 
+    return HexData(r);
+}
+
+HexData HexData::operator+(uint8_t data) const
+{
+    std::vector<uint8_t>* r = new std::vector<uint8_t>(_data->size()+1);
+    for (size_t i = 0; i < _data->size(); ++i)
+        (*r)[i+_data->size()] = (*_data)[i];
+    (*r)[_data->size()] = data;
     return HexData(r);
 }
 

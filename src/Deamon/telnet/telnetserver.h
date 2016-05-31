@@ -18,6 +18,8 @@ public:
     void deleteSocket(TelnetSocket* socket);
     QString serverInfo(){return "VPDeamon v1.0\n";}
 
+    void init(){}
+
 signals:
 
 public slots:

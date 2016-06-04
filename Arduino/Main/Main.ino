@@ -115,10 +115,11 @@ void loop() {
     if (Active_Mute==true){
       buttonProcess();
     }
-    if (digitalRead(PIN_ON_SLEEP)==1){
-      transmitTx();
+    while (digitalRead(PIN_ON_SLEEP)!=1){
+    
     }
-      
+    
+    transmitTx(); 
   }
 }
 

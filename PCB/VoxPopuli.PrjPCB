@@ -30,7 +30,7 @@ DItemRevisionGUID=
 ReportSuppressedErrorsInMessages=0
 FSMCodingStyle=eFMSDropDownList_OneProcess
 FSMEncodingStyle=eFMSDropDownList_OneHot
-OutputPath=Project Outputs for VoxPopuli
+OutputPath=
 LogFolderPath=
 ManagedProjectGUID=
 
@@ -151,7 +151,7 @@ GenerateBOM=1
 OutputJobsCount=0
 
 [Generic_EDE]
-OutputDir=Project Outputs for VoxPopuli
+OutputDir=
 
 [OutputGroup1]
 Name=Netlist Outputs

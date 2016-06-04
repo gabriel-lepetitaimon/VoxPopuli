@@ -1,0 +1,100 @@
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{RapportFr}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		 GLOBAL PACKAGES		%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{makeidx}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		 	LANGUAGE			%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{microtype}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[frenchb]{babel}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			SOMMAIRE			%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\addto\captionsfrench{
+	\renewcommand{\contentsname}
+	{Sommaire}
+}
+\RequirePackage[hidelinks]{hyperref}
+\newcommand{\chapterN}[1]{\chapter*{#1}\addcontentsline{toc}{chapter}{#1}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			ANNEXES				%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\annexe}[2]{\section{#1} \label{#2}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		 		UML				%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\RequirePackage{tikz}
+\RequirePackage[simplified]{pgf-umlcd}
+
+\newcommand{\UML}[1]{\begin{tikzpicture}[font=\ttfamily\scriptsize] #1 \end{tikzpicture}}
+\newcommand{\UMLclass}[3]{\begin{class}[text width=6.5cm]{#1}{#2} #3 \end{class}}
+\newcommand{\UMLinterface}[3]{\begin{interface}[text width=5cm]{#1}{#2} #3 \end{interface}}
+
+%template
+\tikzset{
+	template parameter/.style={
+		append after command={
+			node [draw, densely dashed, umlcolor, font=\ttfamily]
+			at (\tikzlastnode.north east)
+			{#1}
+		}
+	}
+}
+\newcommand{\UMLtemplate}[4]{\begin{class}[template parameter=#2, text width=7cm]{#1}{#3} #4 \end{class}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		 	   C++				%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\RequirePackage{listings}
+\RequirePackage{xcolor}
+\RequirePackage{verbatim}
+
+\definecolor{sampleGrey}{gray}{0.93}
+\newcommand{\sample}[1]	{\vspace{-0.2em}\begin{center}\colorbox{sampleGrey}{\begin{minipage}[t]{0.97\columnwidth} {\small \texttt{#1}}\end{minipage}}\end{center}}
+
+\newcommand{\tab}{\hspace*{4mm}}
+
+\definecolor{codeGray}{rgb}{0.9,0.9,0.9}
+\definecolor{codeGreen}{RGB}{19,129,19}
+\definecolor{codeAppleGreen}{RGB}{142,208,0}
+\definecolor{codeOrange}{rgb}{1.0,0.4,0}
+\definecolor{codePurple}{RGB}{59,8,137}
+
+\newcommand{\code}[1]{\begin{footnotesize}\texttt{#1}\end{footnotesize}}
+
+\lstnewenvironment{Cpp}[1][]
+{
+	\lstset { %
+		language=C++,                % choose the language of the code
+		basicstyle=\scriptsize \ttfamily,       % the size of the fonts that are used for the code
+		numbers=left,                   % where to put the line-numbers
+		numberstyle=\tiny,      % the size of the fonts that are used for the line-numbers
+		numbersep=5pt,                  % how far the line-numbers are from the code
+		tabsize=4,          % sets default tabsize to 2 spaces
+		captionpos=b,           % sets the caption-position to bottom$
+		backgroundcolor=\color{codeGray},  % choose the background color. You must add \usepackage{color}
+		keywordstyle=\color{codeOrange},
+		commentstyle=\color{codeGreen},
+		stringstyle =\color{codeAppleGreen},
+		moredelim=**[is][\bfseries \color{codePurple}]{$}{$}
+	}
+}
+{
+}

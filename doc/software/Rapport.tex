@@ -3,7 +3,7 @@
 
 \begin{document}
 
-\chapterN{VoxPopuli: l'interface avec la Régie}
+\chapterN{VoxPopuli: l'interface avec la Régie}	
 
 Les défis proposés par ce projet ne sont pas purement matériels. La gestion du réseau de télécommande nécessite une bonne connaissance du fonctionnement d'un réseau XBee, du protocole de communication utilisé par le calculateur à l'intérieur de chaque télécommande. Bref la gestion bas-niveau du réseau de télécommande ne peut pas être délégué aux concepteurs de "l'application régie" et doit être une composante importante de la solution que nous proposons. 
 
@@ -66,7 +66,12 @@ Pour ce faire, le réseau "physique" (ou réel) de télécommande est découplé
 
 \includegraphics[width=0.8\columnwidth]{rsc/diaReseau}
 
-À ce mécanisme de patch s'ajoute la possibilité de définir Groupe dans le réseau virtuel. Un groupe virtuel permet de gérer un ensemble de télécommande sans connaître leur nombre à l'avance. Vu du réseau réel, un groupe peut être connecté à plusieurs télécommandes réelles, vu de l'application régie il permet de modifier l'état de  toutes les télécommandes simultanément via la télécommande virtuelle GlobalRemote, ou bien d'une en particulier via des télécommandes "avatars". En effet, les télécommandes virtuelles avatars peuvent être dynamiquement (et même aléatoirement) connectées à une des télécommandes réelles du groupe, mais offre une interface constante aux applications de régies.
+À ce mécanisme de patch s'ajoute la possibilité de définir Groupe dans le réseau virtuel. Un groupe virtuel permet de gérer un ensemble de télécommande sans connaître leur nombre à l'avance. Vu du réseau réel, un groupe peut être connecté à plusieurs télécommandes réelles, vu de l'application régie il permet de modifier l'état de  toutes les télécommandes simultanément via la télécommande virtuelle GlobalRemote, ou bien d'une en particulier via des télécommandes "avatars". En effet, les télécommandes virtuelles avatars peuvent être dynamiquement (et même aléatoirement) connectées à une des télécommandes réelles du groupe, mais offre une interface constante aux applications de régies. 
+
+Quelles opèrent en solitaire ou au service d'un groupe les télécommandes virtuelles ont ainsi toujours les mêmes contrôles évenementiels:
+
+\includegraphics[width=0.8\columnwidth]{rsc/diaVirtualRemote}
+
 
 Dans le cas d'une "histoire simple", les télécommandes de chaque écrans ont tout intérêt à être placées dans un groupe. Pour les séquences de vote, un controle de toutes les télécommandes en simultané peut-être suffisant, puis pour les séquences de jeu il suffit de demander à une télécommande avatar de se connecter à une seule télécommande réelle du groupe. L'interfaçage avec le jeu est alors simple puisque quelque soit la télécommande réelle choisie, les évenements envoyés par l'avatar seront les mêmes.
 
@@ -139,13 +144,45 @@ Ainsi pour renommer \verb|Remote1| en \verb|Telecommande1| il faut executé la c
 Remotes.Remote1 renamed "Telecommande1"	}
 La réponse renvoyée par la CLI stipulant que l'opération de renommage s'est déroulée correctement ne s'affiche qu'en mode verbose.
 
-\section{Détail des modèles JSON}
+%\section{Détail des modèles JSON}
+%
+%La syntaxe décrite plus haut définit un cadre, une architecture dans laquelle il faut préciser le détail de chaque modèle. On s'attardera ici sur la définition de tous les objets qui peuvent apparaitre dans le modèle network.json et event.json. Pour chacun d'entre eux on étudiera leur valeur par défaut, les méthodes qu'ils mettent à disposition et les propriétés qu'ils contiennent.
+%
+%\subsection*{network.json}
+%
+%\subsubsection*{Modèle par défaut}
+%\begin{Cpp}
+%{
+%	"Patch":
+%	{	
+%	},
+%	"Remotes":
+%	{	
+%	},
+%	"USBPort": ""
+%}
+%\end{Cpp}
+%
+%\subsubsection*{Méthodes}
+%
+%\textbf{listPort()}: liste les ports USB connectés à une liaison série (potentiellement le coordinateur du réseau).
+%
+%\textbf{scan()}: scanne le réseau pour détecter les nouvelles télécommandes.
+%
+%\textbf{sendAT()}: envoie une commande AT à la carte XBee coordinatrice du réseau
+%
+%\subsubsection*{Propriétés}
+%
+%\textbf{USBPort}: Le port série sur lequel VoxPopuli Deamon doit se connecter
+%
+%\textbf{Remotes}: Une liste d'objets de type \verb|Remote| qui représentent les télécommandes réelles du réseau.
+%
+%\textbf{Patch}: Liste de connexion entre les télécommandes réelles et les télécommandes ou groupes virtuels.
+%\subsubsection*{title}
+%
+%\subsection*{event.json}
+%
 
-\subsection*{network.json}
-
-
-
-\subsection*{event.json}
 
 %\section{Implémentation}
 %Ce rapport n'a pas vocation à décrire l'implémentation de VoxPopuli de manière exhaustive, cette section à simplement pour objectif de permettre au lecteur de se plonger dans le code sans s'y noyer. 

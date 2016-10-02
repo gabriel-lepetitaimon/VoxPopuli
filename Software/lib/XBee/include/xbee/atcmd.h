@@ -27,7 +27,7 @@ XBEE_BEGIN_DECLS
 #ifndef XBEE_CMD_REQUEST_TABLESIZE
 	/// Maximum number of outstanding requests.  Two should be sufficient in
 	/// most (all?) cases.  One might even be enough if space is tight.
-	#define XBEE_CMD_REQUEST_TABLESIZE	2
+        #define XBEE_CMD_REQUEST_TABLESIZE	4
 #endif
 
 /// Maximum number of bytes in the parameter sent to a command.  The NI

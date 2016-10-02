@@ -12,7 +12,10 @@ class XBeeInterface;
 class Remote;
 
 enum XBEE_MSG_TYPE{
-    LED_INTENSITY = 0x21,
+    LED_INTENSITY = 0x20,
+    LED1_INTENSITY = 0x21,
+    LED2_INTENSITY = 0x22,
+    LED3_INTENSITY = 0x23,
     MUTE_MODE = 0x64,
     ACTIVE_MODE = 0x96,
     BUTTON_LEFT = 0xB0,

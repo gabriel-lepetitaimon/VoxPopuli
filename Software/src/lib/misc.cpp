@@ -159,7 +159,7 @@ string HexData::strData() const
 {
     string r;
     for(size_t i=0; i<_data->size(); i++)
-        r+=(*_data)[i];
+        r.push_back((*_data)[i]);
     return r;
 }
 

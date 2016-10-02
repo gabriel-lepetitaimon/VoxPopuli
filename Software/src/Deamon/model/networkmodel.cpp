@@ -228,7 +228,10 @@ QJsonObject Remote::createRemoteJSon( QString address)
     o.insert("Left","up");
     o.insert("Right","up");
     o.insert("Action","up");
-    o.insert("LED", 0);
+    o.insert("LED1", 0);
+    o.insert("LED2", 0);
+    o.insert("LED3", 0);
+
 
     return o;
 }
@@ -259,6 +262,15 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
             data+=hex[i];
         remote()->sendTX(data);
         return true;
+    }else if(function == "LED"){
+        if(args.size()!=1)
+            return false;
+        bool success;
+        uint8_t intensity = args[0].toInt(&success);
+        if(!success)
+            return false;
+        fastTrigger(LED, intensity);
+        return true;
     }
     return false;
 }
@@ -283,7 +295,22 @@ JSonNode::SetError Remote::fastTrigger(FTriggerEvent e, const HexData &v)
     if(e==LED){
         if(remote())
             remote()->safeSendMsg("L",LED_INTENSITY, v);
-        return setNumber("LED", v.toInt());
+        setNumber("LED1", v.toInt());
+        setNumber("LED2", v.toInt());
+        setNumber("LED3", v.toInt());
+        return NoError;
+    }else if(e==LED1){
+        if(remote())
+            remote()->safeSendMsg("L1",LED1_INTENSITY, v);
+        return setNumber("LED1", v.toInt());
+    }else if(e==LED2){
+        if(remote())
+            remote()->safeSendMsg("L2",LED2_INTENSITY, v);
+        return setNumber("LED2", v.toInt());
+    }else if(e==LED3){
+        if(remote())
+            remote()->safeSendMsg("L3",LED3_INTENSITY, v);
+        return setNumber("LED3", v.toInt());
     }else{
         SNetworkModel::ptr()->patch()->fastTriggerRemote(_name, e, v);
         return NoError;
@@ -294,12 +321,24 @@ JSonNode::SetError Remote::fastTrigger(FTriggerEvent e, const HexData &v)
 
 JSonNode::SetError Remote::setValue(QString name, QString value)
 {
-    if(name=="LED"){
+    if(name=="LED1"){
         bool success;
         uint8_t intensity = value.toInt(&success);
         if(!success)
             return WrongArg;
-        return fastTrigger(LED, intensity);
+        return fastTrigger(LED1, intensity);
+    }else if(name=="LED2"){
+        bool success;
+        uint8_t intensity = value.toInt(&success);
+        if(!success)
+            return WrongArg;
+        return fastTrigger(LED2, intensity);
+    }else if(name=="LED3"){
+        bool success;
+        uint8_t intensity = value.toInt(&success);
+        if(!success)
+            return WrongArg;
+        return fastTrigger(LED3, intensity);
     }else if(name=="State"){
         if(remote()){
             if(value=="active")
@@ -309,6 +348,7 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
         }
         return JSonNode::setString(name, value);
     }
+
 
     return JSonNode::setValue(name, value);
 }

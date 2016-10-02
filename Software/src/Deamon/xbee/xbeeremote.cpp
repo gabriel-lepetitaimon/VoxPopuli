@@ -12,9 +12,9 @@ XBeeRemote::XBeeRemote(std::vector<uint8_t> address, XBeeInterface *interface)
 
 void XBeeRemote::init()
 {
-    std::string hexAddr = intToHexStr(_interface->macAddress());
-    sendAT(std::string("DH"+hexAddr.substr(0,8)));
-    sendAT(std::string("DL"+hexAddr.substr(8,8)));
+    std::string hex = HexData(_interface->macAddress()).toHexStr();
+    sendAT(std::string("DH"+hex.substr(0,8)));
+    sendAT(std::string("DL"+hex.substr(8,8)));
 }
 
 bool XBeeRemote::sendAT(std::string cmd, std::function<bool (std::vector<uint8_t>)> cb) const

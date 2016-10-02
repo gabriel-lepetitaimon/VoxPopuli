@@ -21,7 +21,10 @@ enum FTriggerEvent{
     RIGHT=2,
     LEFT=3,
     ACTION=4,
-    LED=5
+    LED=5,
+    LED1=6,
+    LED2=7,
+    LED3=8
 };
 
 QString eventName(FTriggerEvent e);

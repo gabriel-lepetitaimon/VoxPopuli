@@ -1,4 +1,3 @@
-#define XBEE_CMD_REQUEST_TABLESIZE	3
 #include "xbeeinterface.h"
 
 #include <string.h>
@@ -130,7 +129,7 @@ bool XBeeInterface::tryToConnectOnPort(std::string port)
 
 bool XBeeInterface::initialize()
 {
-    int init = 1;
+    int init = 0;
 
     _mac.clear();
     for(int i=0;i<8;i++)
@@ -222,7 +221,8 @@ bool XBeeInterface::sendRemoteAT(std::string cmd, const uint8_t dest[], std::fun
 
     xbee_cmd_set_target(c, addr, 256*0xFF + 0xFE);
 
-    return xbee_cmd_send(c)==0;
+    int r = xbee_cmd_send(c);
+    return !r;
 }
 
 
@@ -232,7 +232,8 @@ bool XBeeInterface::sendAT(std::string cmd, std::function<bool(std::vector<uint8
     if(c==-1)
         return false;
 
-    return xbee_cmd_send(c)==0;
+    bool r = xbee_cmd_send(c)==0;
+    return r;
 }
 
 void XBeeInterface::scanNetwork()
@@ -273,6 +274,12 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, v
         return -1;
     char at[3] = {cmd.at(0), cmd.at(1), '\0'};
     int c = xbee_cmd_create(&_xbee, at);
+
+    while(c<0){
+        xbee_dev_tick(&_xbee);
+        msleep(20);
+        c = xbee_cmd_create(&_xbee, at);
+    }
 
     xbee_cmd_set_callback(c, cb, user_data);
 

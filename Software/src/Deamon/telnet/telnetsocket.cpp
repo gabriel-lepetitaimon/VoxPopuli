@@ -27,6 +27,8 @@ void TelnetSocket::msgReveived(const QByteArray& msg)
         setVerbose(false);
     else if(cmd=="#quit")
         qApp->quit();
+    else if(cmd=="#q")
+        _socket->disconnectFromHost();
     else
         dispatchCmd(cmd);
 }

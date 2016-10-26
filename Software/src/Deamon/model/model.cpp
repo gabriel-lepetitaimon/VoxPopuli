@@ -298,8 +298,6 @@ bool JSonNode::populateNode(const QJsonObject& data)
     if(_parentNode)
         _parentNode->addSubNode(this);
 
-    updateParentJSon();
-
     return true;
 }
 
@@ -324,6 +322,7 @@ void JSonNode::addSubNode(JSonNode *node)
     printOut('.'+node->name()+" added");
     connect(node, SIGNAL(out(QString)), this, SIGNAL(out(QString)));
     node->printOut();
+    updateParentJSon();
 }
 
 void JSonNode::removeSubNode(JSonNode *node)
@@ -332,6 +331,7 @@ void JSonNode::removeSubNode(JSonNode *node)
     _jsonData.remove(node->name());
     _subnodes.removeOne(node);
     node->deleteLater();
+    updateParentJSon();
 }
 
 void JSonNode::clearJsonData()

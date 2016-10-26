@@ -191,8 +191,8 @@ void MidiInterface::removeEventTrigger(EventTrigger *e)
  *               Midi Port                  *
  *******************************************/
 
-MidiPort::MidiPort(QString name, bool inPort, MidiInterface *interface)
-    :JSonNode(name, interface, RENAMEABLE), _in(inPort)
+MidiPort::MidiPort(QString name, bool inPort, MidiInterface *midiInterface)
+    :JSonNode(name, midiInterface, RENAMEABLE), _in(inPort)
 {
     if(_in){
         RtMidiIn* in = MidiInterface::RtIn();

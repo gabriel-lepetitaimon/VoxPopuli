@@ -16,7 +16,7 @@
 
 #include "xbeeremote.h"
 
-#define FRAMERATE 200
+#define FRAMERATE 100
 
 class XBeeInterface;
 typedef singleton<XBeeInterface> SXBeeInterface;
@@ -42,6 +42,7 @@ public:
      bool sendRemoteTX(std::string cmd, const uint8_t dest[9]);
 
      std::vector<std::string> listPort() const;
+     std::string portName() const;
      void scanNetwork();
 
      std::vector<XBeeRemote>& remotes() {return _remotes;}
@@ -55,7 +56,7 @@ protected:
 
     bool tryToConnect();
     bool initialize();
-    void standardRun();
+    void standardRunTick();
 
 
 
@@ -71,7 +72,7 @@ private:
     int prepareXBeeATCmd(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb);
     int prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, void* user_data);
     bool tryToConnectOnPort(std::string port);
-    bool isStillConnected();
+    bool isStillConnected() const;
 
     bool addRemote(std::vector<uint8_t> addr);
     bool removeRemote(std::vector<uint8_t> addr);
@@ -79,7 +80,7 @@ private:
 
     int16_t generateFrameID(int recursion=1) const;
 
-    std::string _port;
+    std::string _wishedPort;
     bool _forcePort=false;
     int _frameStep=-1;
     bool _scanNeeded=true;    

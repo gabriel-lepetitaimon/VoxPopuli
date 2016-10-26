@@ -35,7 +35,7 @@ class XBeeRemote
     std::string rxBuffer;
     std::map<std::string, std::string> _safeSendMap;
 public:
-    XBeeRemote(std::vector<uint8_t> address, XBeeInterface* interface);
+    XBeeRemote(std::vector<uint8_t> address, XBeeInterface* xbeeInterface);
 
     void init();
     bool sendAT(std::string cmd, std::function<bool(std::vector<uint8_t>)> cb= [](std::vector<uint8_t>){return true;}) const;

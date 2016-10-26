@@ -4,9 +4,10 @@
 #include "eventmodel.h"
 #include "misc.h"
 
+#ifdef X11_SUPPORT
 #include "X11/Xlib.h"
 #include "X11/extensions/XTest.h"
-
+#endif
 
 EventTrigger::EventTrigger(QString name, bool inEvent, QObject *parent)
     :QObject(parent), _name(name), _inEvent(inEvent)
@@ -133,13 +134,14 @@ bool EventTrigger::updateEventTrigger(QMap<QString, EventCb*>::iterator it)
         }
         return true;
     }else if(def[0]=="K"){
+        // -----  KEYBOARD  EVENT  -----
         if(_inEvent)
             return false;
         if(def.size()!=3)
             return false;
         if(it.value())
             return true;
-
+#ifdef X11_SUPPORT
         Display* xdp = XOpenDisplay(NULL);
         if(!xdp)
             return true;
@@ -161,6 +163,9 @@ bool EventTrigger::updateEventTrigger(QMap<QString, EventCb*>::iterator it)
             XSync (xdp, False);
             XTestGrabControl (xdp, False);
         });
+#else
+        qWarning()<<"Keyboard events are only supported via X11 on unix...";
+#endif
         return true;
     }
 

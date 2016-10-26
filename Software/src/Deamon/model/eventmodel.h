@@ -72,7 +72,7 @@ class MidiPort: public JSonNode
     bool _in;
 
 public:
-    MidiPort(QString name, bool inPort, MidiInterface* interface);
+    MidiPort(QString name, bool inPort, MidiInterface* midiInterface);
     virtual ~MidiPort();
     static QJsonObject createMidiPortJSon(bool inPort, QString port="");
 

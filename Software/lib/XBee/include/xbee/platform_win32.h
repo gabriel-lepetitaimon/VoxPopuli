@@ -29,7 +29,7 @@
 		// slightly different name.
 		#define strncmpi strnicmp
 	#else
-		#include <endian.h>
+		#include <portable_endian.h>
 	#endif
 
 	// debugging defines

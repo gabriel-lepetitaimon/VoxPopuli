@@ -4,8 +4,8 @@
 
 #include <iostream>
 
-XBeeRemote::XBeeRemote(std::vector<uint8_t> address, XBeeInterface *interface)
-    :_addr(address), _interface(interface)
+XBeeRemote::XBeeRemote(std::vector<uint8_t> address, XBeeInterface *xbeeInterface)
+    :_addr(address), _interface(xbeeInterface)
 {
 
 }

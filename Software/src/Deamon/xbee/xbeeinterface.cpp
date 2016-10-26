@@ -32,9 +32,22 @@ std::vector<std::string> XBeeInterface::listPort() const
     foreach(QString s, l)
         r.push_back("/dev/"+s.toStdString());
 
+#elif WIN32
+    r = {"COM0","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9"};
 #endif
 
     return r;
+}
+
+std::string XBeeInterface::portName() const
+{
+    if(_state < CONNECTED)
+        return "";
+#ifdef POSIX
+    return std::string(_xbee.serport.device)
+#elif WIN32
+    return std::string("COM") + std::to_string(_xbee.serport.comport);
+#endif
 }
 
 XBeeRemote *XBeeInterface::remote(const uint8_t dest[])
@@ -63,55 +76,91 @@ void XBeeInterface::run()
             if(tryToConnect()){
                 _state = INITIALIZING;
                 continue;
-            }
+            }else
+                _frameStep = -1;
             break;
+            
+        // ------
         case XBeeInterface::INITIALIZING:
             if(initialize()){
                 _state = CONNECTED;
+                qWarning()<<QString("Connected on port: ")+QString::fromStdString(_wishedPort);
+                _frameStep = 0;
                 continue;
             }else{
                 _state = DISCONNECTED;
                 continue;
             }
             break;
+            
+         // ------
         case XBeeInterface::CONNECTED:
-            standardRun();
-            _state = DISCONNECTED;
-            if(!_forcePort && SNetworkModel::ptr())
-                SNetworkModel::ptr()->set("USBPort", "");
-            continue;
+            if(!isStillConnected()){
+                qWarning()<<"Disconnected";
+                _state = DISCONNECTED;
+                if(!_forcePort && SNetworkModel::ptr())
+                    SNetworkModel::ptr()->set("USBPort", "");
+                _frameStep = -1;
+            }else
+                standardRunTick();
+        break;
         }
-        msleep(1000);
+        
+        // Clock management
+        if(_frameStep == -1)    //Disconnected
+            msleep(1000);
+        else{                   //Connected
+            if(_frameStep==5*FRAMERATE)
+                _frameStep = 0;
+            else
+                _frameStep++;
+            msleep(1000/FRAMERATE);
+        }
     }
 }
 
 bool XBeeInterface::tryToConnect()
 {
+    if(tryToConnectOnPort(_wishedPort))
+        return true;
+
     if(_forcePort)
-        return tryToConnectOnPort(_port);
+        return false;
+        
 
     std::vector<std::string> ports;
     ports = listPort();
 
     for(auto port=ports.begin(); port!=ports.end(); port++){
-        if(*port != _port && tryToConnectOnPort(*port))
+        if(*port != _wishedPort && tryToConnectOnPort(*port))
             return true;
     }
-    if(_port=="")
-        return false;
-    return tryToConnectOnPort(_port);
+    
+    return false;
 }
 
 bool XBeeInterface::tryToConnectOnPort(std::string port)
 {
-    xbee_serial_t serPort = { 9600, 0};
+   xbee_serial_t serPort = { 9600, 0};
+    
 #ifdef POSIX
    strcpy(serPort.device,port.data());
+#elif WIN32
+    if( port[0]!='C' || port[1]!='O' || port[2]!='M' )
+        return false;
+    uint8_t comID = 0;
+    for(size_t i=3; i<port.size(); i++){
+        comID *= 10;
+        comID += port[i] - '0';
+    }
+    serPort.comport = comID;
 #endif
+
    int status;
    if( (status = xbee_dev_init(&_xbee, &serPort, 0, 0)) ){
        if(status == -EIO)
-           qWarning()<<"Wrong baudrate";
+           if(_forcePort)
+                qWarning()<<QString::fromStdString(_wishedPort)<<": Connection failed (maybe a wrong baudrate was specified)";
        return false;
    }
 
@@ -122,7 +171,11 @@ bool XBeeInterface::tryToConnectOnPort(std::string port)
        xbee_dev_tick( &_xbee);
        status = xbee_cmd_query_status( &_xbee);
    } while (status == -EBUSY);
-    _port = port;
+   
+   if(_wishedPort != port){
+       _wishedPort = port;
+       SNetworkModel::ptr()->setXbeeUsbPort(port);
+   }
    return true;
 }
 
@@ -143,65 +196,45 @@ bool XBeeInterface::initialize()
     return true;
 }
 
-void XBeeInterface::standardRun()
+void XBeeInterface::standardRunTick()
 {
-    _frameStep = 0;
-    qWarning()<<QString("Connected on port")+_xbee.serport.device;
-    SNetworkModel::ptr()->setXbeeUsbPort(_xbee.serport.device);
-    scanNetwork();
-    while(_state == CONNECTED){
-        if(!isStillConnected()){
-            qWarning()<<"Disconnected";
-            _state = DISCONNECTED;
-        }
-
-        if(!_frameStep){
-            if(_scanNeeded)
-                scanNetwork();
-            else{
-                //_scanNeeded = true;
-                for (size_t i = 0; i < _remotes.size(); ++i) {
-                    _remotes.at(i).checkStatus();
-                }
+    if(!_frameStep){
+        if(_scanNeeded)
+            scanNetwork();
+        else{
+            //_scanNeeded = true;
+            for (size_t i = 0; i < _remotes.size(); ++i) {
+                _remotes.at(i).checkStatus();
             }
         }
-
-        xbee_dev_tick(&_xbee);
-
-        if(_fastCycle){
-            _fastCycle = false;
-           // continue;
-        }
-
-        for(size_t i=0; i<_remotes.size(); i++){
-            if(_remotes[i].tick())
-                break;
-        }
-
-
-        if(_frameStep==5*FRAMERATE)
-            _frameStep = 0;
-        else
-            _frameStep++;
-        msleep(2500/FRAMERATE);
-
     }
 
-    _frameStep = -1;
+    xbee_dev_tick(&_xbee);
+
+    if(_fastCycle){
+        _fastCycle = false;
+    }
+
+    for(size_t i=0; i<_remotes.size(); i++){
+        if(_remotes[i].tick())
+            break;
+    }
+    
 }
 
 void XBeeInterface::forcePort(std::string port)
 {
     if(port==""){
-        _state = DISCONNECTED;
         _forcePort = false;
+        _wishedPort = "";
+        _state = DISCONNECTED;
         return;
     }else
         _forcePort=true;
-    if(_port==port || port == _xbee.serport.device)
+    if(_wishedPort==port)
         return;
 
-    _port = port;
+    _wishedPort = port;
 }
 
 
@@ -292,13 +325,14 @@ int XBeeInterface::prepareXBeeATCmd(std::string cmd, xbee_cmd_callback_fn& cb, v
 }
 
 
-bool XBeeInterface::isStillConnected()
+bool XBeeInterface::isStillConnected() const
 {
     std::vector<std::string> ports = listPort();
     for(auto it=ports.begin(); it!=ports.end(); it++){
-        if(*it == _port )
+        if(*it == _wishedPort )
             return true;
     }
+    
     return false;
 }
 

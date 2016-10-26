@@ -1,10 +1,11 @@
+TEMPLATE = app
+
 ### CONFIG ###
 QT += core network
 QT -= gui
 
 CONFIG += c++11, console
 CONFIG -= app_bundle
-TEMPLATE = app
 
 TARGET = VPDeamon
 
@@ -45,11 +46,17 @@ HEADERS += \
     model/eventtrigger.h \
     model/patch.h
 
-
+INCLUDEPATH += $$SRC/lib
     
 ### LIBRAIRIES ###
-INCLUDEPATH += $$SRC/lib
-LIBS += -ltelnet -lrtmidi -lX11 -lXtst
+win32{
+	INCLUDEPATH += $$LIB/libtelnet $$LIB/RtMidi
+	SOURCES += $$LIB/libtelnet/libtelnet.c $$LIB/RtMidi/RtMidi.cpp
+}
+unix{
+	LIBS += -ltelnet -lrtmidi -lX11 -lXtst
+	DEFINES += X11_SUPPORT
+}
 include($$LIB/XBee/XBee.pri)
 
 RESOURCES += \

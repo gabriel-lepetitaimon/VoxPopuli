@@ -21,8 +21,7 @@ unix {
 SOURCES += $$files($$SRC/posix/*.c)
 DEFINES += POSIX
 }
-#win32 {
-#SOURCES += $$files($$XBee/src/win32/*.c)
-#DEFINES += WIN32
-#}
-
+win32 {
+SOURCES += $$files($$SRC/win32/*.c)
+DEFINES += _WIN32 WIN32
+}

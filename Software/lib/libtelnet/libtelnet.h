@@ -215,7 +215,7 @@ enum telnet_event_type_t {
 typedef enum telnet_event_type_t telnet_event_type_t; /*!< Telnet event type. */
 
 /*! 
- * environ/MSSP command information 
+ * environTelnet/MSSP command information 
  */
 struct telnet_environ_t {
 	unsigned char type; /*!< either TELNET_ENVIRON_VAR or TELNET_ENVIRON_USERVAR */
@@ -319,7 +319,7 @@ union telnet_event_t {
 		const struct telnet_environ_t *values; /*!< array of variable values */
 		size_t size;                           /*!< number of elements in values */
 		unsigned char cmd;                     /*!< SEND, IS, or INFO */
-	} environ;
+	} environTelnet;
 	
 	/*!
 	 * MSSP event

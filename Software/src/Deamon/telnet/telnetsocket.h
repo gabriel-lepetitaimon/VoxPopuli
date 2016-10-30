@@ -18,7 +18,7 @@ public:
 
     static void telnetEvent(telnet_t*, telnet_event_t* ev, void* user_data);
 
-    void msgReveived(const QByteArray &msg);
+    void cmdReceived(const QString &cmd);
 
     void dispatchCmd(QString cmd);
 
@@ -49,11 +49,26 @@ protected:
     JSonModel* model();
     void switchMode(TelnetMode m);
 
+    bool _friendly;
+    void setFriendlyCLI(bool friendly);
+
     bool _verbose=false;
     bool _locked=true;
     void setVerbose(bool verbose);
 
     QStringList splitArgs(QString args, bool comaSplit=false);
+    inline void telnetWrite(QString data);
+
+    // -- Friendly CLI handler --
+    bool processInput(const QByteArray &input);
+    bool moveCursor(bool toLeft);
+    void moveTelnetCursor(bool toLeft);
+    void cliWrite(QString output);
+    void eraseLine(bool resetInternal=true);
+    void updateCLI();
+    QStringList _cmdHistory;
+    QString _currentLine;
+    int _linePos=0, _histPos;
 
 private:
     QTimer t;

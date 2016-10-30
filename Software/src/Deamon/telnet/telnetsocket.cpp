@@ -7,11 +7,9 @@
 #include <QMetaMethod>
 #include <functional>
 
-void TelnetSocket::msgReveived(const QByteArray& msg)
+void TelnetSocket::cmdReceived(const QString& cmd)
 {
     lockInput();
-    QString cmd(msg);
-    cmd.remove("\r\n");
 
     if(cmd=="#-1")
         switchMode(Basic);
@@ -25,6 +23,10 @@ void TelnetSocket::msgReveived(const QByteArray& msg)
         setVerbose(true);
     else if(cmd=="#-v")
         setVerbose(false);
+    else if(cmd=="#friendly")
+        setFriendlyCLI(true);
+    else if(cmd=="#-friendly")
+        setFriendlyCLI(false);
     else if(cmd=="#quit")
         qApp->quit();
     else if(cmd=="#q")
@@ -146,6 +148,25 @@ void TelnetSocket::switchMode(TelnetSocket::TelnetMode m)
         connect(model(), SIGNAL(out(QString)), this, SLOT(send(QString)));
 }
 
+void TelnetSocket::setFriendlyCLI(bool friendly)
+{
+    if(friendly==_friendly)
+        return;
+
+    telnet_negotiate(_telnetInfo, friendly?TELNET_WILL:TELNET_WONT, TELNET_TELOPT_ECHO);
+    telnet_negotiate(_telnetInfo, TELNET_DO, TELNET_TELOPT_LINEMODE);
+    if(friendly){
+        char linemode[] = {1,0};//EDIT:1 TRAPSIG:2 MODE_ACK:4 SOFT_TAB:8 LIT_ECHO:16
+        telnet_subnegotiation(_telnetInfo, TELNET_TELOPT_LINEMODE, linemode, 2);
+    }else{
+        char linemode[] = {1,1+2};//EDIT:1 TRAPSIG:2 MODE_ACK:4 SOFT_TAB:8 LIT_ECHO:16
+        telnet_subnegotiation(_telnetInfo, TELNET_TELOPT_LINEMODE, linemode, 2);
+    }
+
+    _friendly = friendly;
+    releaseInput();
+}
+
 void TelnetSocket::setVerbose(bool verbose)
 {
     if(verbose == _verbose)
@@ -229,6 +250,8 @@ TelnetSocket::TelnetSocket(QTcpSocket *socket, TelnetServer *server)
     connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 
+    _friendly = true;   //trigger the not friendly setup
+    setFriendlyCLI(false);
     send(server->serverInfo(), true);
 }
 
@@ -261,26 +284,151 @@ void TelnetSocket::telnetEvent(telnet_t*, telnet_event_t *ev, void *user_data)
     switch(ev->type){
     case TELNET_EV_DATA:
         if(!socket->_locked)
-            socket->msgReveived(QByteArray(ev->data.buffer, ev->data.size));
+            socket->processInput(QByteArray(ev->data.buffer, ev->data.size));
         return;
     case TELNET_EV_SEND:
         socket->_socket->write(ev->data.buffer, ev->data.size);
+        return;
+    case TELNET_EV_ERROR:
+        qWarning()<<"Telnet error: "<<QString(ev->error.msg);
         return;
     default:
         return;
     }
 }
+
+bool TelnetSocket::processInput(const QByteArray &input){
+    if(!input.size())
+        return false;
+
+    QString msg = QString(input);
+    if(!_friendly){
+        cmdReceived(msg.remove("\r\n"));
+        return true;
+    }
+
+    if(input=="\x1B[D"){        //right
+        moveCursor(false);
+    }else if(input=="\x1B[C"){  //left
+        moveCursor(true);
+    }else if(input=="\x1B[A"){   //up
+        if(_histPos <= 0)
+            return true;
+        eraseLine();
+        cliWrite(_cmdHistory.at(--_histPos));
+    }else if(input=="\x1B[B"){   //down
+        if(_histPos >= _cmdHistory.size())
+            return true;
+        eraseLine();
+        _histPos++;
+        if(_histPos<_cmdHistory.length())
+            cliWrite(_cmdHistory.at(_histPos));
+    }else if( msg.startsWith("\r")){ //enter
+        _cmdHistory.append(_currentLine);
+        _histPos = _cmdHistory.length();
+
+        telnetWrite("\n");
+
+        cmdReceived(_currentLine);
+
+        _linePos = 0;
+        _currentLine = "";
+    }else if(input == "\x7F"){      //backspace
+        if(_linePos<=0)
+            return false;
+        _currentLine.remove(--_linePos,1);
+        updateCLI();
+    }else if(msg[0]!='\x1' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
+        cliWrite(msg);
+    }
+
+
+    return true;
+}
+
+void TelnetSocket::cliWrite(QString output)
+{
+    if(_linePos == _currentLine.length()){
+        _currentLine.append(output);
+        _linePos += output.length();
+        telnetWrite(output);
+    }else{
+        _currentLine.insert(_linePos, output);
+        telnetWrite(_currentLine.mid(_linePos));
+        _linePos += output.length();
+        for(int i=_currentLine.length(); i>_linePos;i--) moveTelnetCursor(false);
+    }
+}
+
+bool TelnetSocket::moveCursor(bool toLeft)
+{
+    if(toLeft){     // To the left
+        if(_linePos>=_currentLine.size())
+            return false;
+        _linePos++;
+    }else{          // To the right
+        if(_linePos<=0)
+            return false;
+        _linePos--;
+    }
+    moveTelnetCursor(toLeft);
+    return true;
+}
+
+void TelnetSocket::moveTelnetCursor(bool toLeft)
+{
+    if(toLeft)
+        telnetWrite("\x1B[C");
+    else
+        telnetWrite("\x1B[D");
+}
+
+void TelnetSocket::eraseLine(bool resetInternal)
+{
+    QString output = "\r";
+    for(int i=0; i<_currentLine.length(); i++)       output += " ";
+    output += "  \r>";
+    telnetWrite(output);
+
+    if(resetInternal){
+        _linePos = 0;
+        _currentLine = "";
+    }
+}
+
+void TelnetSocket::updateCLI()
+{
+    eraseLine(false);
+    telnetWrite(_currentLine);
+    for(int i=_currentLine.length(); i>_linePos;i--) moveTelnetCursor(false);
+}
+
 void TelnetSocket::send(QString str, bool release)
 {
-    if(!_locked)
-        telnet_printf(_telnetInfo, "\r");
-    str = str+(str.isEmpty()?"":"\n");
-    telnet_printf(_telnetInfo, str.toStdString().data());
+    if(str.isEmpty())
+        return;
 
-    if(!_locked)
-        telnet_printf(_telnetInfo, ">");
-    else if(release)
+    if(_friendly){
+        QString erase = "\r";
+        for(int i=0; i<_currentLine.length(); i++)       erase += " ";
+        erase += "\r";
+        telnetWrite(erase);
+    }
+
+    str = str+"\n";
+    telnetWrite(str);
+
+    if(!_locked){
+        if(_friendly){
+            telnetWrite(">");
+            updateCLI();
+        }
+    }else if(release)
         releaseInput();
+}
+
+void TelnetSocket::telnetWrite(QString data){
+    telnet_printf(_telnetInfo, data.toStdString().data());
 }
 
 void TelnetSocket::lockInput(){
@@ -294,7 +442,7 @@ void TelnetSocket::releaseInput()
 {
     if(!_locked)
         return;
-    telnet_printf(_telnetInfo, ">");
+    if(_friendly) telnet_printf(_telnetInfo, ">");
     _locked = false;
     t.stop();
 }

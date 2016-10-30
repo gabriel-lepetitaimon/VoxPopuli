@@ -35,7 +35,7 @@ public:
 
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
-
+    virtual void generateHelp(bool function);
 
 private:
     QList<VirtualRemote*> _vRemotes;
@@ -67,6 +67,7 @@ public:
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
     QList<Event*> _eventsHandler;
 
@@ -99,6 +100,7 @@ public:
 
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
     virtual JSonNode::SetError parseArray(QString name, QStringList value);
 };
 
@@ -136,6 +138,7 @@ protected:
     QList<VirtualRemote*> _virtualRemotes;
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
 
 };

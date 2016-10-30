@@ -28,6 +28,7 @@ public:
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
     RemoteList* _remotes;
     Patch* _patch;
@@ -55,6 +56,7 @@ public slots:
 
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
     QList<Remote*> _remotes;
 };
@@ -82,6 +84,7 @@ public:
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
 };
 

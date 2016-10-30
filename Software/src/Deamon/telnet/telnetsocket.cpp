@@ -311,6 +311,10 @@ bool TelnetSocket::processInput(const QByteArray &input){
         moveCursor(false);
     }else if(input=="\x1B[C"){  //left
         moveCursor(true);
+    }else if(input=="\033[H"){  //home
+        while (moveCursor(false)){}
+    }else if(input=="\033[F"){  //end
+        while (moveCursor(true)){}
     }else if(input=="\x1B[A"){   //up
         if(_histPos <= 0)
             return true;
@@ -324,11 +328,12 @@ bool TelnetSocket::processInput(const QByteArray &input){
         if(_histPos<_cmdHistory.length())
             cliWrite(_cmdHistory.at(_histPos));
     }else if( msg.startsWith("\r")){ //enter
+        telnetWrite("\n");
+        if(_currentLine.isEmpty())
+            return false;
+
         _cmdHistory.append(_currentLine);
         _histPos = _cmdHistory.length();
-
-        telnetWrite("\n");
-
         cmdReceived(_currentLine);
 
         _linePos = 0;
@@ -338,7 +343,12 @@ bool TelnetSocket::processInput(const QByteArray &input){
             return false;
         _currentLine.remove(--_linePos,1);
         updateCLI();
-    }else if(msg[0]!='\x1' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
+    }else if(input == "\033[3~"){    //delete
+        if(_linePos>=_currentLine.length())
+            return false;
+        _currentLine.remove(_linePos,1);
+        updateCLI();
+    }else if(msg[0]!='\x1B' && msg[0]!='\x33' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
         cliWrite(msg);
     }
 

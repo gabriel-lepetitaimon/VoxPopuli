@@ -66,6 +66,19 @@ bool NetworkModel::execFunction(QString function, QStringList args, const std::f
     return false;
 }
 
+void NetworkModel::generateHelp(bool function)
+{
+    if(!function){
+    addHelp("USBPort", "Defines antenna USB port", false);
+    addHelp("Remotes", "Connected remotes", false);
+    addHelp("Patch", "Connexion patch between remotes and virtual remotes", false);
+    }else{
+    addHelp("sendAT( atCmd )", "Send an AT command to the connected XBee Card", true);
+    addHelp("listPort()", "List USB port", true);
+    addHelp("scan()", "Start a scan on the XBee network to discover remotes", true);
+    }
+}
+
 
 /********************************************
  *              RemoteList                  *
@@ -131,6 +144,13 @@ bool RemoteList::execFunction(QString function, QStringList , const std::functio
         return true;
     }
     return false;
+}
+
+void RemoteList::generateHelp(bool function)
+{
+    if(!function){
+    addHelp("list()", "List connected remotes.", false);
+    }
 }
 
 Remote *RemoteList::byName(QString name)
@@ -273,6 +293,29 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
         return true;
     }
     return false;
+}
+
+void Remote::generateHelp(bool function)
+{
+    if(!function){
+    addHelp("MAC","MAC address of the remote's Xbee. (READONLY)",false);
+    addHelp("State","Current remote's state ",false);
+    addHelp("SignalStrength","Signal strength of the remote (READONLY)",false);
+    addHelp("Battery","Battery level of the remote (READONLY)",false);
+    addHelp("Up", "State of the UP button of the remote (READONLY)", false);
+    addHelp("Down", "State of the DOWN button of the remote (READONLY)", false);
+    addHelp("Left", "State of the LEFT button of the remote (READONLY)", false);
+    addHelp("Right", "State of the RIGHT button of the remote (READONLY)", false);
+    addHelp("Action", "State of the ACTION button of the remote (READONLY)", false);
+    addHelp("LED1", "Intensity of the LED1", false);
+    addHelp("LED2", "Intensity of the LED2", false);
+    addHelp("LED3", "Intensity of the LED3", false);
+    }else{
+    addHelp("sendAT( atCmd )", "Send an AT command to the remote's XBee", true);
+    addHelp("sendTX( cmd )", "Send a command to the remote's arduino", true);
+    addHelp("sendTXHex( cmd )", "Send a command to the remote's arduino", true);
+    addHelp("LED( intensity )", "Set the intensity of the three LEDs", true);
+    }
 }
 
 XBeeRemote *Remote::remote()

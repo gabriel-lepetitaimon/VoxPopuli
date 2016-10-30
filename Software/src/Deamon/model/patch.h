@@ -60,6 +60,8 @@ public :
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
     SetError parseArray(QString name, QStringList value);
+    virtual void generateHelp(bool function);
+
 
     bool addLink(QString rName, QString vName);
     bool addEntry(QString rName, QString vName);

@@ -58,6 +58,18 @@ JSonNode::SetError Patch::parseArray(QString name, QStringList value)
     return NoError;
 }
 
+void Patch::generateHelp(bool function)
+{
+    if(function){
+        addHelp("connect( remote, virtual )", "Create a link between a remote and a virtual remote or group", true);
+        addHelp("disconnect( remote, virtual )", "Delete a link between a remote and a virtual remote or group", true);
+        addHelp("disconnectRemote( remote )", "Delete all the links from a remote", true);
+        addHelp("disconnectVirtual( virtual )", "Delete all the links from a virtual remote or group", true);
+        addHelp("disconnectVirtualRemote( virtualRemote )", "Delete all the links from a virtual remote", true);
+        addHelp("disconnectVirtualGroup( virtualGroup )", "Delete all the links from a virtual group", true);
+    }
+}
+
 
 //  -----------  LINK HANDLER  -------------
 

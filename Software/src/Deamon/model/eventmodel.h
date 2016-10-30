@@ -30,6 +30,8 @@ public:
 protected:
     MidiInterface* _midi;
     VirtualNetwork* _virtualNet;
+
+    virtual void generateHelp(bool function);
 };
 
 
@@ -59,6 +61,7 @@ public:
 
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
     QList<MidiPort*> _ports;
 };
@@ -96,6 +99,7 @@ public:
 protected:
     SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
 
     static void midiCallback(double timeSptamp, std::vector<unsigned char> *message, void *userData);
 

@@ -179,6 +179,14 @@ void JSonNode::printOut(QString msg)
     emit out(addr+msg);
 }
 
+void JSonNode::addHelp(QString name, QString doc, bool function)
+{
+    if(function)
+        _helpFunction->insert(name,doc);
+    else
+        _helpVariables->insert(name,doc);
+}
+
 bool JSonNode::rename(QString name)
 {
     if(!_parentNode)
@@ -299,6 +307,27 @@ bool JSonNode::populateNode(const QJsonObject& data)
         _parentNode->addSubNode(this);
 
     return true;
+}
+
+const QMap<QString, QString> &JSonNode::getHelp(bool function)
+{
+    if(function){
+        if(!_helpFunction){
+            _helpFunction = new QMap<QString,QString>();
+            generateHelp(true);
+            _helpFunction->insert("print()", "Print the json contents of this object.");
+            if(_flags&RENAMEABLE)
+                _helpFunction->insert("rename( string )", "Rename this object.");
+        }
+        return *_helpFunction;
+    }
+
+
+    if(!_helpVariables){
+        _helpVariables = new QMap<QString,QString>();
+        generateHelp(false);
+    }
+    return *_helpVariables;
 }
 
 bool JSonNode::createSubNode(QString , const QJsonObject &)

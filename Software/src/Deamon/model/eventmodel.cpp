@@ -34,6 +34,14 @@ bool EventModel::createSubNode(QString name, const QJsonObject &data)
     return false;
 }
 
+void EventModel::generateHelp(bool function)
+{
+    if(!function){
+        addHelp("Midi", "Midi interface", false);
+        addHelp("VirtualNet", "Network of virtual remotes and groups", false);
+    }
+}
+
 
 /********************************************
  *              Midi Interface              *
@@ -129,6 +137,15 @@ bool MidiInterface::execFunction(QString function, QStringList args, const std::
     }
 
     return false;
+}
+
+void MidiInterface::generateHelp(bool function)
+{
+    if(function){
+    addHelp("listPort()", "List available MIDI port", true);
+    addHelp("open( name, \"in\"/\"out\", portName )", "Open a MIDI port (portName is optional)", true);
+    addHelp("close( portName )", "Close a MIDI port", true);
+    }
 }
 
 MidiPort *MidiInterface::portByName(bool inPort, QString portName)
@@ -345,6 +362,16 @@ bool MidiPort::execFunction(QString function, QStringList args, const std::funct
         return true;
     }
     return false;
+}
+
+void MidiPort::generateHelp(bool function)
+{
+    if(!function){
+    addHelp("port", "Midi port name or number", false);
+    }else{
+    addHelp("portName()", "Retreive port name", true);
+    addHelp("send( msg )", "Send a MIDI message through the port", true);
+    }
 }
 
 void MidiPort::midiCallback(double , std::vector<unsigned char> *message, void *userData)

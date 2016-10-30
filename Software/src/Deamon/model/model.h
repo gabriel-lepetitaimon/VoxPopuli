@@ -48,6 +48,8 @@ public:
 
     bool populateNode(const QJsonObject &data);
 
+    const QMap<QString,QString> &getHelp(bool function);
+
     virtual ~JSonNode();
 
 public slots:
@@ -77,6 +79,8 @@ protected:
 
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& cb=[](QString){});
     void printOut(QString msg);
+    virtual void generateHelp(bool function) = 0;
+    void addHelp(QString name, QString doc, bool function);
 
     bool rename(QString name);
 
@@ -87,6 +91,8 @@ protected:
 
 private:
     QList<JSonNode*> _subnodes;
+    QMap<QString,QString> * _helpFunction = 0;
+    QMap<QString,QString> * _helpVariables = 0;
 };
 
 

@@ -189,6 +189,19 @@ bool VirtualNetwork::execFunction(QString function, QStringList args, const std:
     return false;
 }
 
+void VirtualNetwork::generateHelp(bool function)
+{
+    if(!function){
+        addHelp("GlobalRemote", "A remote to control them all", false);
+    }else{
+        addHelp("addRemote( name )", "Add a virtual remote", true);
+        addHelp("removeRemote( name )", "Remove a virtual remote", true);
+        addHelp("addGroup( name )", "Add a virtual group", true);
+        addHelp("removeGroup( name )", "Remove a virtual group", true);
+        addHelp("autoGenerateRemote()", "Auto generate virtuals remotes according to real remotes", true);
+    }
+}
+
 
 
 /********************************************
@@ -349,6 +362,22 @@ bool VirtualRemote::execFunction(QString, QStringList, const std::function<void 
     return false;
 }
 
+void VirtualRemote::generateHelp(bool function)
+{
+    if(!function){
+        addHelp("Up",       "State of the Up button of the virtual remote", false);
+        addHelp("Down",     "State of the Down button of the virtual remote", false);
+        addHelp("Left",     "State of the Left button of the virtual remote", false);
+        addHelp("Right",    "State of the Right button of the virtual remote", false);
+        addHelp("Action",   "State of the Action button of the virtual remote", false);
+        addHelp("LED",      "Led intensity of the virtual remote", false);
+        addHelp("State",    "State of the virtual remote", false);
+        if(_group)
+            addHelp("remoteID", "ID of the real remote (in the group) this virtual remote is connected", false);
+
+    }
+}
+
 /********************************************
  *                 Event                    *
  *******************************************/
@@ -470,6 +499,16 @@ bool Event::execFunction(QString function, QStringList args, const std::function
 
 
     return false;
+}
+
+void Event::generateHelp(bool function)
+{
+    if(!function){
+        addHelp("any", "Events triggered when an action happened (READONLY)", false);
+    }else{
+        addHelp("add( event, trigger )", "Add an event definition for a trigger (trigger = \"any\" by default)", true);
+        addHelp("remove( event, trigger )", "Remve an event for a trigger (trigger = \"any\" by default)", true);
+    }
 }
 
 JSonNode::SetError Event::parseArray(QString name, QStringList value)
@@ -634,6 +673,17 @@ bool VirtualGroup::execFunction(QString function, QStringList, const std::functi
         return true;
     }
     return false;
+}
+
+void VirtualGroup::generateHelp(bool function)
+{
+    if(!function){
+        addHelp("slavesNbr", "Number of remote slaves (READONLY)", false);
+        addHelp("avatarsNbr", "Number of virtual remotes in the group", false);
+        addHelp("GlobalRemote", "A remote to control them all", false);
+    }else{
+        addHelp("listSlaves()", "List remotes slaves connected to the group", true);
+    }
 }
 
 

@@ -44,7 +44,7 @@ std::string XBeeInterface::portName() const
     if(_state < CONNECTED)
         return "";
 #ifdef POSIX
-    return std::string(_xbee.serport.device)
+    return std::string(_xbee.serport.device);
 #elif WIN32
     return std::string("COM") + std::to_string(_xbee.serport.comport);
 #endif

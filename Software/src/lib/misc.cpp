@@ -112,19 +112,25 @@ HexData::HexData()
     _data = new std::vector<uint8_t>();
 }
 
-HexData::HexData(string data)
+HexData::HexData(const string &data)
 {
-    _data = new std::vector<uint8_t>(data.size());
+    _data = new std::vector<uint8_t>(2*data.size());
     for(size_t i=0; i<data.size(); i++)
         (*_data)[i] = (uint8_t)data.at(i);
 }
 
-HexData::HexData(std::vector<uint8_t> data)
+HexData::HexData(const std::vector<uint8_t> &data)
 {
     _data = new std::vector<uint8_t>(data);
 }
 
-HexData::HexData(uint8_t data)
+HexData::HexData(const char* data, const unsigned int size){
+    _data = new std::vector<uint8_t>(size);
+    for(unsigned int i=0; i<size; i++)
+        (*_data)[i] = (uint8_t)data[i];
+}
+
+HexData::HexData(const uint8_t data)
 {
     _data = new std::vector<uint8_t>(1, data);
 }
@@ -152,6 +158,16 @@ HexData HexData::fromHexStr(string data)
 string HexData::toHexStr() const
 {
     return intToHexStr(*_data);
+}
+
+string HexData::toIntStr(char sep) const
+{
+    string r;
+    for(size_t i=0; i<_data->size(); i++){
+        if(i) r += sep;
+        r += std::to_string((*_data)[i]);
+    }
+    return r;
 }
 
 

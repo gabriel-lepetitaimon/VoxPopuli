@@ -15,15 +15,18 @@ std::vector<uint8_t> hexStrToInt(const std::string& str);
 class HexData{
 public:
     HexData();
-    HexData(std::string data);
-    HexData(std::vector<uint8_t> data);
-    HexData(uint8_t data);
+    HexData(const std::string &data);
+    HexData(const std::vector<uint8_t> &data);
+    HexData(const char* data, const unsigned int size=1);
+    HexData(const uint8_t data);
     HexData(const HexData& data);
     ~HexData();
 
     static HexData fromHexStr(std::string data);
 
     std::string toHexStr() const;
+    std::string toIntStr(char sep = ' ') const;
+    std::string toCharStr() const;
     std::string strData() const;
     unsigned int toInt() const;
     bool toInt(unsigned int& r) const;

@@ -157,7 +157,7 @@ bool EventTrigger::updateEventTrigger(QMap<QString, EventCb*>::iterator it)
         KeyCode key = XKeysymToKeycode(xdp, keySym);
         if(!key)
             return false;
-        it.value() = new EventCb([xdp, key, on](uint8_t data){
+        it.value() = new EventCb([xdp, key, on](uint8_t){
             XTestGrabControl (xdp, True);
             XTestFakeKeyEvent(xdp, key, on, 0);
             XSync (xdp, False);

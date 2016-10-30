@@ -622,7 +622,7 @@ JSonNode::SetError VirtualGroup::setValue(QString name, QString value)
     return JSonNode::setValue(name, value);
 }
 
-bool VirtualGroup::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
+bool VirtualGroup::execFunction(QString function, QStringList, const std::function<void (QString)> &returnCb)
 {
     if(function=="listSlaves"){
         QString r = 0;

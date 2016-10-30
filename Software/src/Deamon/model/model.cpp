@@ -167,6 +167,11 @@ QString JSonNode::print() const
     return r;
 }
 
+QStringList JSonNode::variablesNames() const
+{
+    return _jsonData.keys();
+}
+
 void JSonNode::printOut(QString msg)
 {
     QString addr = address();

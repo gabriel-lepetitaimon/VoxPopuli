@@ -250,6 +250,9 @@ TelnetSocket::TelnetSocket(QTcpSocket *socket, TelnetServer *server)
     connect(socket, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(socket, SIGNAL(disconnected()), this, SLOT(socketDisconnected()));
 
+    autoCompleteTimer.setInterval(1000);
+    autoCompleteTimer.setSingleShot(true);
+
     _friendly = true;   //trigger the not friendly setup
     setFriendlyCLI(false);
     send(server->serverInfo(), true);
@@ -348,6 +351,12 @@ bool TelnetSocket::processInput(const QByteArray &input){
             return false;
         _currentLine.remove(_linePos,1);
         updateCLI();
+    }else if(input == "\t"){        //tab
+        int cursorDelta=0;
+        QString autoCompleted = autoComplete(_currentLine.mid(0, _linePos), cursorDelta, autoCompleteTimer.isActive());
+        autoCompleteTimer.start();
+        cliWrite(autoCompleted);
+        moveCursor(cursorDelta);
     }else if(msg[0]!='\x1B' && msg[0]!='\x33' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
         cliWrite(msg);
     }
@@ -385,6 +394,23 @@ bool TelnetSocket::moveCursor(bool toLeft)
     return true;
 }
 
+bool TelnetSocket::moveCursor(int deltaPos)
+{
+    if(deltaPos==0)
+        return true;
+    bool left = deltaPos>0;
+
+    if(!left)
+        deltaPos *= -1;
+
+    for(int i=0; i<deltaPos; i++){
+        if(!moveCursor(left))
+            return false;
+    }
+
+    return true;
+}
+
 void TelnetSocket::moveTelnetCursor(bool toLeft)
 {
     if(toLeft)
@@ -413,6 +439,65 @@ void TelnetSocket::updateCLI()
     for(int i=_currentLine.length(); i>_linePos;i--) moveTelnetCursor(false);
 }
 
+QString TelnetSocket::autoComplete(QString uncompleteLine, int &cursorPos, bool showPossibilites)
+{
+    if(uncompleteLine.contains(')') || uncompleteLine.contains('(') || uncompleteLine.contains(':') || !model())
+        return "";
+
+    uncompleteLine = uncompleteLine.mid(uncompleteLine.indexOf(' ',-1)+1);
+
+    QStringList path = uncompleteLine.split('.');
+    JSonNode* n = model();
+
+    for(int i=0; i<path.length()-1; i++){
+        if(! (n=n->nodeAt(path[i])) )
+            return "";
+    }
+
+    QStringList possibilities;
+
+    foreach(QString var, n->variablesNames()){
+        if(var.startsWith(path.last()) && var != path.last())
+            possibilities.append(var);
+    }
+
+    foreach(QString func, n->getHelp(true).keys()){
+        if(func.startsWith(path.last())){
+            int nameID = func.indexOf('(');
+            QString funcPrototype = func.mid(0, nameID+1);
+            func = func.mid(nameID).remove(')').remove(' ');
+            if(func=="(")
+                funcPrototype += ")";
+            else{
+                funcPrototype+=" ";
+                int argNbr = func.count(',');
+                for(int i=0; i<argNbr; i++) funcPrototype +=", ";
+                funcPrototype+=")";
+                cursorPos = -2*argNbr-1;
+            }
+            possibilities.append(funcPrototype);
+        }
+    }
+
+    if(possibilities.size()==1)
+        return possibilities.first().mid(path.last().length());
+
+    cursorPos = 0;
+
+    if(showPossibilites && possibilities.size()>0){
+        path.removeLast();
+        QString joinedPath = path.join('.');
+        if(!joinedPath.isEmpty())
+            joinedPath += '.';
+
+        foreach(QString p, possibilities)
+            send(joinedPath + p);
+        send(" ");
+    }
+
+    return "";
+}
+
 void TelnetSocket::send(QString str, bool release)
 {
     if(str.isEmpty())
@@ -421,7 +506,7 @@ void TelnetSocket::send(QString str, bool release)
     if(_friendly){
         QString erase = "\r";
         for(int i=0; i<_currentLine.length(); i++)       erase += " ";
-        erase += "\r";
+        erase += "  \r";
         telnetWrite(erase);
     }
 

@@ -62,16 +62,18 @@ protected:
     // -- Friendly CLI handler --
     bool processInput(const QByteArray &input);
     bool moveCursor(bool toLeft);
+    bool moveCursor(int deltaPos);
     void moveTelnetCursor(bool toLeft);
     void cliWrite(QString output);
     void eraseLine(bool resetInternal=true);
     void updateCLI();
+    QString autoComplete(QString uncompleteLine, int &cursorPos, bool showPossibilites = false);
     QStringList _cmdHistory;
     QString _currentLine;
     int _linePos=0, _histPos;
 
 private:
-    QTimer t;
+    QTimer t, autoCompleteTimer;
 };
 
 #endif // TELNETSOCKET_H

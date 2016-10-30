@@ -45,6 +45,7 @@ public:
 
     void printOut();
     virtual QString print() const;
+    QStringList variablesNames() const;
 
     bool populateNode(const QJsonObject &data);
 

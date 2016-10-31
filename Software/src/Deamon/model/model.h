@@ -82,6 +82,7 @@ protected:
     void printOut(QString msg);
     virtual void generateHelp(bool function) = 0;
     void addHelp(QString name, QString doc, bool function);
+    QString helpString();
 
     bool rename(QString name);
 

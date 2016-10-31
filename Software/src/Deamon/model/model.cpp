@@ -192,6 +192,86 @@ void JSonNode::addHelp(QString name, QString doc, bool function)
         _helpVariables->insert(name,doc);
 }
 
+QString JSonNode::helpString()
+{
+    QString r;
+    const int maxColumn = 80;
+
+    //function
+    {
+        r += " -- " + name() + " Functions  --\n";
+        int definitionColumn = 0;
+        foreach(QString f, getHelp(true).keys()) {
+            if(f.length() > definitionColumn)
+                definitionColumn = f.length();
+        }
+        definitionColumn += 3;
+
+
+        for(auto it = getHelp(true).constBegin(); it!=getHelp(true).constEnd(); it++) {
+            if(it.key()=="help()")
+                continue;
+
+            r += it.key();
+            r += QString(' ').repeated(definitionColumn-it.key().length());
+
+            QStringList docs = it.value().split(' ');
+            int column = 0;
+            for(int i=0; i<docs.size(); i++){
+                if(docs.at(i).length() + column + definitionColumn > maxColumn){
+                    if(column==0)
+                        r+= docs.at(i);
+                    r+="\n" + QString(' ').repeated(definitionColumn);
+                    if(column!=0){
+                        r+= docs.at(i)+' ';
+                        column = docs.at(i).length() + 1;
+                    }
+                }else{
+                    r+=docs.at(i)+' ';
+                    column += docs.at(i).length() + 1;
+                }
+            }
+            r+='\n';
+        }
+    }
+
+    //variables
+    if(!getHelp(false).isEmpty()){
+        r += "\n -- " + name() + " Variables  --\n";
+        int definitionColumn = 0;
+        foreach(QString f, getHelp(false).keys()) {
+            if(f.length() > definitionColumn)
+                definitionColumn = f.length();
+        }
+        definitionColumn += 3;
+
+        for(auto it = getHelp(false).constBegin(); it!=getHelp(false).constEnd(); it++) {
+            r += it.key();
+            r += QString(' ').repeated(definitionColumn-it.key().length());
+
+            QStringList docs = it.value().split(' ');
+            int column = 0;
+            for(int i=0; i<docs.size(); i++){
+                if(docs.at(i).length() + column + definitionColumn > maxColumn){
+                    if(column==0)
+                        r+= docs.at(i);
+                    r+="\n" + QString(' ').repeated(definitionColumn);
+                    if(column!=0){
+                        r+= docs.at(i)+' ';
+                        column = docs.at(i).length() + 1;
+                    }
+                }else{
+                    r+=docs.at(i)+' ';
+                    column = docs.at(i).length() + 1;
+                }
+            }
+            r+='\n';
+        }
+    }
+
+    return r;
+}
+
 bool JSonNode::rename(QString name)
 {
     if(!_parentNode)
@@ -235,6 +315,9 @@ bool JSonNode::call(const QString &functionName, const QStringList &arg, const s
     }else if(functionName == "rename" && (_flags&RENAMEABLE) && arg.size()==1){
         rename(arg.at(0));
         returnCb("");
+        return true;
+    }else if(functionName == "help"){
+        returnCb(helpString());
         return true;
     }
     return false;
@@ -321,6 +404,7 @@ const QMap<QString, QString> &JSonNode::getHelp(bool function)
             _helpFunction = new QMap<QString,QString>();
             generateHelp(true);
             _helpFunction->insert("print()", "Print the json contents of this object.");
+            _helpFunction->insert("help()",  "Print the help string of this object.");
             if(_flags&RENAMEABLE)
                 _helpFunction->insert("rename( string )", "Rename this object.");
         }

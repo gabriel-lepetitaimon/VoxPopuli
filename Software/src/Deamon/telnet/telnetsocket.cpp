@@ -481,10 +481,12 @@ QString TelnetSocket::autoComplete(QString uncompleteLine, int &cursorPos, bool 
 
     if(possibilities.size()==1)
         return possibilities.first().mid(path.last().length());
-
     cursorPos = 0;
 
-    if(showPossibilites && possibilities.size()>0){
+    if(possibilities.isEmpty())
+        return "";
+
+    if(showPossibilites){
         path.removeLast();
         QString joinedPath = path.join('.');
         if(!joinedPath.isEmpty())
@@ -495,7 +497,19 @@ QString TelnetSocket::autoComplete(QString uncompleteLine, int &cursorPos, bool 
         send(" ");
     }
 
-    return "";
+    QString root = possibilities.first();
+    for(int i=1; i<possibilities.length(); i++){
+        int j=0;
+        for(j=0; j<qMin(root.length(), possibilities.at(i).length()); j++){
+            if(root.at(j)!=possibilities.at(i).at(j))
+                break;
+        }
+        root = root.mid(0,j);
+        if(root.isEmpty())
+            return "";
+    }
+
+    return root.mid(path.last().length());
 }
 
 void TelnetSocket::send(QString str, bool release)

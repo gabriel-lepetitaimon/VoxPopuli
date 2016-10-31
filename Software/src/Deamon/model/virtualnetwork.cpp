@@ -479,7 +479,7 @@ bool Event::execFunction(QString function, QStringList args, const std::function
     if(function == "add" || function=="remove"){
         if(args.size()<1){
             returnCb("#Error: Wrong arguments number, expected event definition");
-            return false;
+            return true;
         }
         QString trigger = "any";
         QString definition = args[0];
@@ -491,7 +491,7 @@ bool Event::execFunction(QString function, QStringList args, const std::function
         else{
             if(!removeEvent(definition, trigger)){
                 returnCb("#Error: \""+definition+"\" not found for \""+trigger+"\" trigger.");
-                return false;
+                return true;
             }
         }
         return true;

@@ -59,7 +59,7 @@ void TelnetSocket::dispatchCmd(QString cmd)
         cmd = cmd.left(cmd.indexOf(')'));
         QStringList args = splitArgs(cmd.mid(cmd.indexOf('(')+1), true);
         std::function<void(QString)> cb = [this](QString r){
-                    QMetaObject::invokeMethod(this, "send", Q_ARG(QString, r), Q_ARG(bool, true));
+                QMetaObject::invokeMethod(this, "send", Q_ARG(QString, r), Q_ARG(bool, true));
         };
         if(!n->call(function, args, cb))
             send("#Error: "+function + " doesn't exist.", true);
@@ -79,13 +79,13 @@ void TelnetSocket::dispatchCmd(QString cmd)
             releaseInput();
             return;
         case JSonNode::DoesNotExist:
-            send("#Error: "+property+" is not a member of "+address);
+            send("#Error: "+property+" is not a member of "+address, true);
             return;
         case JSonNode::ReadOnly:
-            send( "#Error: "+property+" is read only");
+            send( "#Error: "+property+" is read only", true);
             return;
         case JSonNode::WrongArg:
-            send("#Error: wrong value");
+            send("#Error: wrong value", true);
             return;
         }
 
@@ -95,10 +95,10 @@ void TelnetSocket::dispatchCmd(QString cmd)
             cmd.remove(cmd.size()-1);
         QString data = "";
         if(!n->getToString(cmd,data)){
-            send("#Error: "+address+(address.isEmpty()?"":".")+cmd+" doesn't exist.");
+            send("#Error: "+address+(address.isEmpty()?"":".")+cmd+" doesn't exist.", true);
             return;
         }
-        send(address+(address.isEmpty()?"":".")+cmd+": "+data);
+        send(address+(address.isEmpty()?"":".")+cmd+": "+data, true);
         return;
     }
 
@@ -500,8 +500,10 @@ QString TelnetSocket::autoComplete(QString uncompleteLine, int &cursorPos, bool 
 
 void TelnetSocket::send(QString str, bool release)
 {
-    if(str.isEmpty())
+    if(str.isEmpty()){
+        if(release) releaseInput();
         return;
+    }
 
     if(_friendly){
         QString erase = "\r";

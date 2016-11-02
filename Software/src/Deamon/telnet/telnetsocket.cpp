@@ -307,8 +307,10 @@ bool TelnetSocket::processInput(const QByteArray &input){
     QString msg = QString(input);
     if(!_friendly){
         _currentLine += msg;
-        if(_currentLine.endsWith("\n"))
+        if(_currentLine.endsWith("\n")){
             cmdReceived(_currentLine.remove("\r").remove("\n"));
+            _currentLine="";
+        }
         return true;
     }
 

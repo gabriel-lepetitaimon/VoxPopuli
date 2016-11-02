@@ -4,6 +4,10 @@ TEMPLATE = app
 QT += core network
 QT -= gui
 
+debug{
+	DEFINES += XBEE_SERIAL_VERBOSE
+}
+
 CONFIG += c++11, console
 CONFIG -= app_bundle
 

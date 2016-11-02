@@ -41,13 +41,13 @@ std::vector<std::string> XBeeInterface::listPort() const
         COMMCONFIG CommConfig;
         DWORD size;
     
-        for(int port=1; port<=100; port++){
+        for(int port=1; port<255; port++){
             snprintf( buffer, sizeof buffer, "COM%d", port);
             size = sizeof CommConfig;
         
             // COM port exists if GetDefaultCommConfig returns TRUE
             // or changes <size> to indicate COMMCONFIG buffer too small.
-           if(GetDefaultCommConfig((wchar_t*) buffer, &CommConfig, &size))
+           if( (GetDefaultCommConfig( (wchar_t*) buffer, &CommConfig, &size) || size > sizeof CommConfig) == TRUE )
                r.push_back("COM"+ std::to_string(port)      );
         }
 #endif

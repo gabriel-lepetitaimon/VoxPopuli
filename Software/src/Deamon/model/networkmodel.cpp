@@ -51,10 +51,14 @@ bool NetworkModel::execFunction(QString function, QStringList args, const std::f
     }else if(function == "listPort"){
         std::vector<std::string> ports = SXBeeInterface::ptr()->listPort();
         QString s;
-        for (size_t i = 0; i < ports.size(); ++i) {
-            s += QString::fromStdString(ports.at(i));
-            if(i!=ports.size()-1)
-                s+="\n";
+        if(!ports.size())
+            s = "None";
+        else{
+            for (size_t i = 0; i < ports.size(); ++i) {
+                s += QString::fromStdString(ports.at(i));
+                if(i!=ports.size()-1)
+                    s+="\n";
+            }
         }
         returnCb(s);
         return true;

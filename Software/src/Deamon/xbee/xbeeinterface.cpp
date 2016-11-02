@@ -13,6 +13,10 @@
 #include <fcntl.h>
 #include <QDir>
 #endif
+#ifdef WIN32
+#include <windows.h>
+#include <winbase.h>
+#endif
 
 XBeeInterface::XBeeInterface() : QThread()
 {
@@ -33,7 +37,19 @@ std::vector<std::string> XBeeInterface::listPort() const
         r.push_back("/dev/"+s.toStdString());
 
 #elif WIN32
-    r = {"COM0","COM1","COM2","COM3","COM4","COM5","COM6","COM7","COM8","COM9"};
+        char buffer[8];
+        COMMCONFIG CommConfig;
+        DWORD size;
+    
+        for(int port=1; port<=100; port++){
+            snprintf( buffer, sizeof buffer, "COM%d", port);
+            size = sizeof CommConfig;
+        
+            // COM port exists if GetDefaultCommConfig returns TRUE
+            // or changes <size> to indicate COMMCONFIG buffer too small.
+           if(GetDefaultCommConfig((wchar_t*) buffer, &CommConfig, &size))
+               r.push_back("COM"+ std::to_string(port)      );
+        }
 #endif
 
     return r;
@@ -141,7 +157,7 @@ bool XBeeInterface::tryToConnect()
 
 bool XBeeInterface::tryToConnectOnPort(std::string port)
 {
-   xbee_serial_t serPort = { 9600, 0};
+   xbee_serial_t serPort = { 9600, 0, 0};
     
 #ifdef POSIX
    strcpy(serPort.device,port.data());

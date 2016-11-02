@@ -341,7 +341,7 @@ bool TelnetSocket::processInput(const QByteArray &input){
 
         _linePos = 0;
         _currentLine = "";
-    }else if(input == "\x7F"){      //backspace
+    }else if(input == "\x7F" || input == "\010"){      //backspace
         if(_linePos<=0)
             return false;
         _currentLine.remove(--_linePos,1);

@@ -16,6 +16,7 @@
 #ifdef WIN32
 #include <windows.h>
 #include <winbase.h>
+#include "winmisc.h"
 #endif
 
 XBeeInterface::XBeeInterface() : QThread()
@@ -37,19 +38,14 @@ std::vector<std::string> XBeeInterface::listPort() const
         r.push_back("/dev/"+s.toStdString());
 
 #elif WIN32
-        char buffer[8];
-        COMMCONFIG CommConfig;
-        DWORD size;
-    
-        for(int port=1; port<255; port++){
-            snprintf( buffer, sizeof buffer, "COM%d", port);
-            size = sizeof CommConfig;
+    TCHAR lpTargetPath[5000]; // buffer to store the path of the COMPORTS
+	for (int i = 0; i<255; i++) // checking ports from COM0 to COM255
+	{
+		std::string ComName = "COM" + std::to_string(i);
         
-            // COM port exists if GetDefaultCommConfig returns TRUE
-            // or changes <size> to indicate COMMCONFIG buffer too small.
-           if( (GetDefaultCommConfig( (wchar_t*) buffer, &CommConfig, &size) || size > sizeof CommConfig) == TRUE )
-               r.push_back("COM"+ std::to_string(port)      );
-        }
+		if (QueryDosDevice(wcstring(ComName), (LPWSTR)lpTargetPath, 5000) != 0) //QueryDosDevice returns zero if it didn't find an object
+			r.push_back(ComName);
+	}
 #endif
 
     return r;

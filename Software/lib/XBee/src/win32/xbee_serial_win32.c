@@ -27,6 +27,9 @@
 #include <errno.h>
 #include <stdio.h>
 
+
+#include "serial_cast.h"
+
 #define XBEE_SER_CHECK(ptr)	\
 	do { if (xbee_ser_invalid(ptr)) return -EINVAL; } while (0)
 
@@ -295,17 +298,18 @@ int xbee_ser_open( xbee_serial_t *serial, uint32_t baudrate)
 			printf( "%s: port already open (hCom=%p)\n",
 				__FUNCTION__, hCom);
 		#endif
-	}
+	}   
 	else
 	{
-		snprintf( buffer, sizeof buffer, "\\\\.\\COM%u", serial->comport);
-		hCom = CreateFile( buffer, GENERIC_READ | GENERIC_WRITE,
-			0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        char comName[11];
+        sprintf(comName, "//./COM%d", serial->comport);
+		hCom = CreateFile( comName, GENERIC_READ | GENERIC_WRITE,
+			0, 0, OPEN_EXISTING, 0, 0);
 		if (hCom == INVALID_HANDLE_VALUE)
 		{
 			#ifdef XBEE_SERIAL_VERBOSE
-				printf( "%s: error %lu opening handle to %s\n", __FUNCTION__,
-					GetLastError(), buffer);
+				printf( "%s: error %lu opening handle to COM%d\n", __FUNCTION__,
+					GetLastError(), serial->comport);
 			#endif
 			return -EIO;
 		}

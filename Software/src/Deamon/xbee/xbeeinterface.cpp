@@ -133,7 +133,7 @@ void XBeeInterface::run()
 
 bool XBeeInterface::tryToConnect()
 {
-    if(tryToConnectOnPort(_wishedPort))
+    if( ! _wishedPort.empty() && tryToConnectOnPort(_wishedPort))
         return true;
 
     if(_forcePort)

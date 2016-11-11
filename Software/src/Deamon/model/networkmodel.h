@@ -12,6 +12,8 @@ class NetworkModel;
 typedef singleton<NetworkModel> SNetworkModel;
 class RemoteList;
 class Remote;
+class RealRemote;
+class EmulatedRemote;
 
 class NetworkModel : public JSonModel
 {
@@ -46,13 +48,17 @@ public:
     bool createSubNode(QString name, const QJsonObject& data);
 
     Remote* byName(QString name);
-    Remote* byAddr(QString addr);
+    RealRemote *byAddr(QString addr);
 
     QList<Remote*>& remotes() {return _remotes;}
+
+    QStringList remotesNames() const;
 
 public slots:
     bool addRemote(QString address);
     void removeRemote(QString address);
+    bool emulateRemote(QString name, QString osc);
+    bool removeEmulatedRemote(QString name);
 
 protected:
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
@@ -65,29 +71,60 @@ protected:
 class Remote: public JSonNode
 {
 
+public:
+    virtual ~Remote();
+
+    void setButtonState(XBEE_MSG_TYPE b, bool pressed);
+    virtual SetError fastTrigger(FTriggerEvent e, const HexData& v);
+
+protected:
+    Remote(QString name, RemoteList* list);
+    static QJsonObject createRemoteJSon();
+
+    virtual SetError setValue(QString name, QString value);
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
+};
+
+class RealRemote: public Remote{
+
     XBeeRemote* _remote=0;
 
 public:
+    RealRemote(QString name, QString mac, RemoteList* list);
+    static QJsonObject createRealRemoteJSon(QString address);
 
-    Remote(QString name, QString mac, RemoteList* list);
-    virtual ~Remote();
-
-    static QJsonObject createRemoteJSon(QString address);
-    void setButtonState(XBEE_MSG_TYPE b, bool pressed);
-    void setSignalStrength(int dB);
+    virtual ~RealRemote();
 
     QString macAddress() const {return _jsonData.value("MAC").toString("");}
     XBeeRemote* remote();
+    void setSignalStrength(int dB);
 
-    SetError fastTrigger(FTriggerEvent e, const HexData& v);
+    virtual SetError fastTrigger(FTriggerEvent e, const HexData& v);
 
 protected:
-    SetError setValue(QString name, QString value);
+    virtual SetError setValue(QString name, QString value);
     virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
     virtual void generateHelp(bool function);
-
 };
 
+class EmulatedRemote: public Remote{
+
+public:
+    EmulatedRemote(QString name, RemoteList* list, QString oscAddress = "");
+    static QJsonObject createEmulatedRemoteJSon(QString oscAddress = "");
+
+    virtual ~EmulatedRemote();
+
+    QString oscAddress() const {return _jsonData.value("osc").toString("");}
+
+    virtual SetError fastTrigger(FTriggerEvent e, const HexData& v);
+
+protected:
+    virtual SetError setValue(QString name, QString value);
+    virtual bool execFunction(QString function, QStringList args, const std::function<void(QString)>& returnCb=[](QString){});
+    virtual void generateHelp(bool function);
+};
 
 
 

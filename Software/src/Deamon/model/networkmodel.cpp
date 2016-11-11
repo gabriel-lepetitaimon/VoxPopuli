@@ -107,7 +107,7 @@ bool RemoteList::addRemote(QString address)
         nbr++;
     remoteName += QString().setNum(nbr);
 
-    createSubNode(remoteName, Remote::createRemoteJSon(address));
+    createSubNode(remoteName, RealRemote::createRealRemoteJSon(address));
 
     return true;
 }
@@ -123,10 +123,46 @@ void RemoteList::removeRemote(QString address)
     }
 }
 
+bool RemoteList::emulateRemote(QString name, QString osc)
+{
+    foreach (Remote* r, _remotes) {
+        if(r->name() == name)
+            return false;
+        if(r->get("osc").toString() == osc)
+            return false;
+    }
+
+    createSubNode(name, EmulatedRemote::createEmulatedRemoteJSon(osc));
+
+    return true;
+}
+
+bool RemoteList::removeEmulatedRemote(QString name)
+{
+    for (int i = 0; i < _remotes.size(); ++i) {
+        if(_remotes.at(i)->name() == name){
+            if(!dynamic_cast<EmulatedRemote*>(_remotes.at(i)) )
+                return false;
+            removeSubNode(_remotes.at(i));
+            _remotes.removeAt(i);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool RemoteList::createSubNode(QString name, const QJsonObject &data)
 {
     if(data.contains("MAC")){
-        Remote* r = new Remote(name, data.value("MAC").toString(), this);
+        RealRemote* r = new RealRemote(name, data.value("MAC").toString(), this);
+        if(!r->populateNode(data)){
+            delete r;
+            return false;
+        }
+        _remotes.append(r);
+        return true;
+    }else if(data.contains("osc")){
+        EmulatedRemote* r = new EmulatedRemote(name, this, data.value("osc").toString());
         if(!r->populateNode(data)){
             delete r;
             return false;
@@ -137,14 +173,37 @@ bool RemoteList::createSubNode(QString name, const QJsonObject &data)
     return false;
 }
 
-bool RemoteList::execFunction(QString function, QStringList , const std::function<void (QString)> &returnCb)
+bool RemoteList::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
 {
     if(function == "list"){
         QString strList;
-        foreach (Remote* r, _remotes)
-            strList+= r->name() + " " + r->get("MAC").toString() + "\n";
+        foreach (Remote* r, _remotes){
+            QString addr = r->get("MAC").toString();
+            if(addr.isEmpty())
+                addr = r->get("osc").toString();
+            strList+= r->name() + " " + addr + "\n";
+        }
         strList.remove(strList.size()-1);
         returnCb(strList);
+        return true;
+    }else if(function=="emulateRemote"){
+        if(args.size()>2 || args.size()==0){
+            returnCb("#Error: Wrong arguments number, remote name and osc address expected (osc address is optional)");
+            return true;
+        }
+            QString name = args[0], osc ="";
+            if(args.size()==2)
+                osc = args[1];
+        if(!emulateRemote(name, osc))
+            returnCb("#Error: This remote name or osc address is already taken");
+        return true;
+    }else if(function=="removeEmulatedRemote"){
+        if(args.size()!=1){
+            returnCb("#Error: Wrong arguments number, remote name expected ");
+            return true;
+        }
+        if(!removeEmulatedRemote(args[0]))
+            returnCb("#Error: No emulated remote is named \""+args[0]+"\".");
         return true;
     }
     return false;
@@ -152,8 +211,10 @@ bool RemoteList::execFunction(QString function, QStringList , const std::functio
 
 void RemoteList::generateHelp(bool function)
 {
-    if(!function){
-    addHelp("list()", "List connected remotes.", false);
+    if(function){
+    addHelp("list()", "List connected remotes.", true);
+    addHelp("emulateRemote( name, osc )", "Add an emulated remote (osc address is optionnal).", true);
+    addHelp("removeEmulatedRemote( name )", "Remove an emulated remote.", true);
     }
 }
 
@@ -166,13 +227,22 @@ Remote *RemoteList::byName(QString name)
     return 0;
 }
 
-Remote *RemoteList::byAddr(QString addr)
+RealRemote *RemoteList::byAddr(QString addr)
 {
     for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
-        if((*it)->macAddress()==addr)
-            return (*it);
+        RealRemote *r = dynamic_cast<RealRemote*>(*it);
+        if(r && r->macAddress()==addr)
+            return r;
     }
     return 0;
+}
+
+QStringList RemoteList::remotesNames() const
+{
+    QStringList l;
+    foreach(Remote* r, _remotes)
+        l.append(r->name());
+    return l;
 }
 
 
@@ -180,16 +250,13 @@ Remote *RemoteList::byAddr(QString addr)
  *              Remote                      *
  *******************************************/
 
-Remote::Remote(QString name, QString mac, RemoteList *list)
+Remote::Remote(QString name, RemoteList *list)
     :JSonNode(name, list, RENAMEABLE)
 {
-    _jsonData["MAC"] = mac;
 }
 
 Remote::~Remote()
 {
-    if(remote())
-        remote()->clearRemoteModel();
 }
 
 void Remote::setButtonState(XBEE_MSG_TYPE b, bool pressed)
@@ -221,32 +288,15 @@ void Remote::setButtonState(XBEE_MSG_TYPE b, bool pressed)
         return;
     }
 
-     fastTrigger(e, pressed?1:0);
+    fastTrigger(e, pressed?1:0);
     setString(bName, pressed?"down":"up");
 }
 
-void Remote::setSignalStrength(int dB)
-{
-    QString sStrength = "Very Low";
-    if(dB > -37)
-        sStrength = "Very high";
-    else if(dB > -45)
-        sStrength = "High";
-    else if(dB > -65)
-        sStrength = "Medium";
-    else if(dB > -80)
-        sStrength = "Low";
 
-    setString("SignalStrength", sStrength);
-}
-
-QJsonObject Remote::createRemoteJSon( QString address)
+QJsonObject Remote::createRemoteJSon()
 {
     QJsonObject o;
-    o.insert("MAC", address);
     o.insert("State", "Initializing");
-    o.insert("SignalStrength", "NA");
-    o.insert("Battery", "HIGH");
     o.insert("Up","up");
     o.insert("Down","up");
     o.insert("Left","up");
@@ -262,31 +312,7 @@ QJsonObject Remote::createRemoteJSon( QString address)
 
 bool Remote::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
 {
-    if(function == "sendAT"){
-        if(args.size()!=1)
-            return false;
-        if(remote())
-            remote()->sendAT(args.first().toStdString(),
-                                      [returnCb, args, this](std::vector<uint8_t> v)->bool{
-                                                    returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
-                                                    return true;
-                                        });
-        return true;
-    }else if(function == "sendTX"){
-        if(args.size()!=1)
-            return false;
-        remote()->sendTX(args.first().toStdString());
-        return true;
-    }else if(function == "sendTXHex"){
-        if(args.size()!=1)
-            return false;
-        std::string data;
-        std::vector<uint8_t> hex = hexStrToInt(args.first().toStdString());
-        for(size_t i=0; i<hex.size(); i++)
-            data+=hex[i];
-        remote()->sendTX(data);
-        return true;
-    }else if(function == "LED"){
+    if(function == "LED"){
         if(args.size()!=1)
             return false;
         bool success;
@@ -302,10 +328,7 @@ bool Remote::execFunction(QString function, QStringList args, const std::functio
 void Remote::generateHelp(bool function)
 {
     if(!function){
-    addHelp("MAC","MAC address of the remote's Xbee. (READONLY)",false);
     addHelp("State","Current remote's state ",false);
-    addHelp("SignalStrength","Signal strength of the remote (READONLY)",false);
-    addHelp("Battery","Battery level of the remote (READONLY)",false);
     addHelp("Up", "State of the UP button of the remote (READONLY)", false);
     addHelp("Down", "State of the DOWN button of the remote (READONLY)", false);
     addHelp("Left", "State of the LEFT button of the remote (READONLY)", false);
@@ -315,48 +338,23 @@ void Remote::generateHelp(bool function)
     addHelp("LED2", "Intensity of the LED2", false);
     addHelp("LED3", "Intensity of the LED3", false);
     }else{
-    addHelp("sendAT( atCmd )", "Send an AT command to the remote's XBee", true);
-    addHelp("sendTX( cmd )", "Send a command to the remote's arduino", true);
-    addHelp("sendTXHex( cmd )", "Send a command to the remote's arduino", true);
     addHelp("LED( intensity )", "Set the intensity of the three LEDs", true);
     }
 }
 
-XBeeRemote *Remote::remote()
-{
-    if(_remote)
-        return _remote;
-
-    for (size_t i = 0; i < SXBeeInterface::ptr()->remotes().size(); ++i) {
-        std::string addr = intToHexStr(SXBeeInterface::ptr()->remotes().at(i).address());
-        if(QString::fromStdString(addr)==get("MAC").toString())
-               return _remote = &SXBeeInterface::ptr()->remotes()[i];
-    }
-    if(SNetworkModel::ptr())
-        SNetworkModel::ptr()->remotes()->removeRemote(get("MAC").toString());
-    return 0;
-}
 
 JSonNode::SetError Remote::fastTrigger(FTriggerEvent e, const HexData &v)
 {
     if(e==LED){
-        if(remote())
-            remote()->safeSendMsg("L",LED_INTENSITY, v);
         setNumber("LED1", v.toInt());
         setNumber("LED2", v.toInt());
         setNumber("LED3", v.toInt());
         return NoError;
     }else if(e==LED1){
-        if(remote())
-            remote()->safeSendMsg("L1",LED1_INTENSITY, v);
         return setNumber("LED1", v.toInt());
     }else if(e==LED2){
-        if(remote())
-            remote()->safeSendMsg("L2",LED2_INTENSITY, v);
         return setNumber("LED2", v.toInt());
     }else if(e==LED3){
-        if(remote())
-            remote()->safeSendMsg("L3",LED3_INTENSITY, v);
         return setNumber("LED3", v.toInt());
     }else{
         SNetworkModel::ptr()->patch()->fastTriggerRemote(_name, e, v);
@@ -387,6 +385,117 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
             return WrongArg;
         return fastTrigger(LED3, intensity);
     }else if(name=="State"){
+        return JSonNode::setString(name, value);
+    }
+
+    return JSonNode::setValue(name, value);
+}
+
+/********************************************
+ *              Real Remote                 *
+ *******************************************/
+
+RealRemote::RealRemote(QString name, QString mac, RemoteList *list)
+    :Remote(name, list)
+{
+        _jsonData["MAC"] = mac;
+}
+
+QJsonObject RealRemote::createRealRemoteJSon( QString address)
+{
+    QJsonObject o = Remote::createRemoteJSon();
+    o.insert("MAC", address);
+    o.insert("SignalStrength", "NA");
+    o.insert("Battery", "HIGH");
+
+    return o;
+}
+
+RealRemote::~RealRemote()
+{
+    if(remote())
+        remote()->clearRemoteModel();
+}
+
+XBeeRemote *RealRemote::remote()
+{
+    if(_remote)
+        return _remote;
+
+    for (size_t i = 0; i < SXBeeInterface::ptr()->remotes().size(); ++i) {
+        std::string addr = intToHexStr(SXBeeInterface::ptr()->remotes().at(i).address());
+        if(QString::fromStdString(addr)==get("MAC").toString())
+               return _remote = &SXBeeInterface::ptr()->remotes()[i];
+    }
+    if(SNetworkModel::ptr())
+        SNetworkModel::ptr()->remotes()->removeRemote(get("MAC").toString());
+    return 0;
+}
+
+void RealRemote::setSignalStrength(int dB)
+{
+    QString sStrength = "Very Low";
+    if(dB > -37)
+        sStrength = "Very high";
+    else if(dB > -45)
+        sStrength = "High";
+    else if(dB > -65)
+        sStrength = "Medium";
+    else if(dB > -80)
+        sStrength = "Low";
+
+    setString("SignalStrength", sStrength);
+}
+
+bool RealRemote::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
+{
+    if(function == "sendAT"){
+        if(args.size()!=1)
+            return false;
+        if(remote())
+            remote()->sendAT(args.first().toStdString(),
+                                      [returnCb, args, this](std::vector<uint8_t> v)->bool{
+                                                    returnCb("["+name()+"|"+args.first().left(2)+"] "+QString::fromStdString(intToHexStr(v)));
+                                                    return true;
+                                        });
+        return true;
+    }else if(function == "sendTX"){
+        if(args.size()!=1)
+            return false;
+        remote()->sendTX(args.first().toStdString());
+        return true;
+    }else if(function == "sendTXHex"){
+        if(args.size()!=1)
+            return false;
+        std::string data;
+        std::vector<uint8_t> hex = hexStrToInt(args.first().toStdString());
+        for(size_t i=0; i<hex.size(); i++)
+            data+=hex[i];
+        remote()->sendTX(data);
+        return true;
+    }
+
+    return Remote::execFunction(function, args, returnCb);
+}
+
+void RealRemote::generateHelp(bool function)
+{
+    if(!function){
+    addHelp("MAC","MAC address of the remote's Xbee. (READONLY)",false);
+    addHelp("SignalStrength","Signal strength of the remote (READONLY)",false);
+    addHelp("Battery","Battery level of the remote (READONLY)",false);
+    }else{
+    addHelp("sendAT( atCmd )", "Send an AT command to the remote's XBee", true);
+    addHelp("sendTX( cmd )", "Send a command to the remote's arduino", true);
+    addHelp("sendTXHex( cmd )", "Send a command to the remote's arduino", true);
+    }
+
+    Remote::generateHelp(function);
+}
+
+JSonNode::SetError RealRemote::setValue(QString name, QString value)
+{
+    if(name=="State"){
         if(remote()){
             if(value=="active")
                 remote()->safeSendMsg("S", ACTIVE_MODE);
@@ -396,9 +505,105 @@ JSonNode::SetError Remote::setValue(QString name, QString value)
         return JSonNode::setString(name, value);
     }
 
-
-    return JSonNode::setValue(name, value);
+    return Remote::setValue(name, value);
 }
 
+JSonNode::SetError RealRemote::fastTrigger(FTriggerEvent e, const HexData &v)
+{
+    if(e==LED){
+        if(remote())
+            remote()->safeSendMsg("L",LED_INTENSITY, v);
+    }else if(e==LED1){
+        if(remote())
+            remote()->safeSendMsg("L1",LED1_INTENSITY, v);
+    }else if(e==LED2){
+        if(remote())
+            remote()->safeSendMsg("L2",LED2_INTENSITY, v);
+    }else if(e==LED3){
+        if(remote())
+            remote()->safeSendMsg("L3",LED3_INTENSITY, v);
+    }
 
+    return Remote::fastTrigger(e,v);
+}
 
+/********************************************
+ *           Emulated Remote                *
+ *******************************************/
+
+EmulatedRemote::EmulatedRemote(QString name, RemoteList *list, QString oscAddress)
+    :Remote(name, list)
+{
+    _jsonData["osc"] = oscAddress;
+}
+
+QJsonObject EmulatedRemote::createEmulatedRemoteJSon( QString oscAddress)
+{
+    QJsonObject o = Remote::createRemoteJSon();
+    o.insert("osc", oscAddress);
+    return o;
+}
+
+EmulatedRemote::~EmulatedRemote()
+{
+}
+
+bool EmulatedRemote::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
+{
+    return Remote::execFunction(function, args, returnCb);
+}
+
+void EmulatedRemote::generateHelp(bool function)
+{
+    if(function){
+    }else{
+        addHelp("osc", "OSC address of this emulated remote (optionnal)", true);
+    }
+
+    Remote::generateHelp(function);
+}
+
+JSonNode::SetError EmulatedRemote::setValue(QString name, QString value)
+{
+    XBEE_MSG_TYPE type = FRAME_END;
+    if(name=="Up")
+        type = BUTTON_UP;
+    else if(name=="Down")
+        type = BUTTON_DOWN;
+    else if(name == "Left")
+        type = BUTTON_LEFT;
+    else if(name == "Rigth")
+        type = BUTTON_RIGHT;
+    else if(name == "Action")
+        type = BUTTON_ACTION;
+    else if(name == "osc"){
+        setString(name, value);
+        return NoError;
+    }else
+        return Remote::setValue(name, value);
+
+    if(value.toLower()=="up" || value=="0")
+        setButtonState(type, 0);
+    else if(value.toLower() == "down" || value == "1")
+        setButtonState(type, 1);
+    else
+        return WrongArg;
+
+    return NoError;
+}
+
+JSonNode::SetError EmulatedRemote::fastTrigger(FTriggerEvent e, const HexData &v)
+{
+    //Todo: OSC trigger...
+    if(e==LED){
+
+    }else if(e==LED1){
+
+    }else if(e==LED2){
+
+    }else if(e==LED3){
+
+    }
+
+    return Remote::fastTrigger(e,v);
+}

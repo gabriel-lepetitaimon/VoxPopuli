@@ -270,7 +270,7 @@ QJsonObject VirtualRemote::createVirtualRemoteJSon()
 
 void VirtualRemote::updateVirtualRemote()
 {
-    QList<Remote*> remotes;
+    QList<Remote*> remotes = patchedRemotes();
     if(remotes.isEmpty()){
         // ---  RESET  ---
         setString("Up",     "NA");

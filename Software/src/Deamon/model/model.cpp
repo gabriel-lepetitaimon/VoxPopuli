@@ -12,7 +12,10 @@ JSonNode::JSonNode(QString name, JSonNode *parent, const JSonNodeFlag& flags )
 
 QVariant JSonNode::get(const QString &name) const
 {
-    return _jsonData.value(name).toVariant();
+    QJsonValue v = _jsonData.value(name);
+    if(v.isUndefined())
+        return QVariant();
+    return v.toVariant();
 }
 
 bool JSonNode::getToString(const QString &name, QString &result) const

@@ -13,7 +13,9 @@ CONFIG -= app_bundle
 
 TARGET = VPDeamon
 
-### LOCATIONS ###
+##############################
+###      LOCATIONS         ###
+##############################
 VPD = $$PWD
 SRC = $$VPD/..
 ROOT = $$SRC/..
@@ -22,7 +24,9 @@ LIB = $$ROOT/lib
 
 
 
-### SOURCES ###
+##############################
+###        SOURCES         ###
+##############################
 SOURCES += VPDeamon.cpp \
     telnet/telnetserver.cpp \
     telnet/telnetsocket.cpp \
@@ -51,8 +55,17 @@ HEADERS += \
     model/patch.h
 
 INCLUDEPATH += $$SRC/lib
-    
-### LIBRAIRIES ###
+
+RESOURCES += \
+    ressources.qrc
+
+
+##############################
+###      LIBRAIRIES        ###
+##############################
+
+
+# telnet, Rt Midi
 win32{
 	INCLUDEPATH += $$LIB/libtelnet $$LIB/RtMidi
 	SOURCES += $$LIB/libtelnet/libtelnet.c $$LIB/RtMidi/RtMidi.cpp
@@ -61,7 +74,30 @@ unix{
 	LIBS += -ltelnet -lrtmidi -lX11 -lXtst
 	DEFINES += X11_SUPPORT
 }
+
+#XBee
 include($$LIB/XBee/XBee.pri)
 
-RESOURCES += \
+
+#OSC
+OSCLIB = $$LIB/oscpack
+
+HEADERS += $$files($$OSCLIB/osc/*.h)
+HEADERS += $$files($$OSCLIB/ip/*.h)
+
+unix:!macx:!ios:!android {
+    DEFINES += OSC_HOST_LITTLE_ENDIAN __LINUX__
+	SOURCES += $$files($$OSCLIB/osc/*.cpp)
+	SOURCES += $$files($$OSCLIB/ip/*.cpp)
+
+    SOURCES += $$files($$OSCLIB/ip/posix/*.cpp)
+}
+win32{
+    DEFINES += OSC_HOST_LITTLE_ENDIAN __WIN32__ WINDOWS
+    SOURCES += $$files($$OSCLIB/ip/win32/*.cpp)
+	#LIBS += $$OSCLIB/MinGW/liboscpack.a
+	LIBS += -lws2_32 -lwinmm
+}
+
+INCLUDEPATH += $$OSCLIB
     ressources.qrc

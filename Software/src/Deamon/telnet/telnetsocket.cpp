@@ -361,7 +361,7 @@ bool TelnetSocket::processInput(const QByteArray &input){
         autoCompleteTimer.start();
         cliWrite(autoCompleted);
         moveCursor(cursorDelta);
-    }else if(msg[0]!='\x1B' && msg[0]!='\x33' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
+    }else if(msg[0]!='\x1B' && msg[0]!='\033' && msg[0]!='\n' && msg[0]!='\0' && msg[0]!='\t' && msg[0]!='\b'){
         cliWrite(msg);
     }
 

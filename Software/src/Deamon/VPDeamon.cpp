@@ -21,7 +21,9 @@ int main(int argc, char *argv[])
     int r= a.exec();
     SXBeeInterface::ptr()->terminate();
     SXBeeInterface::ptr()->wait();
-
+    
+    SEventModel::ptr()->osc()->stopServer();
+    
     STelnetServer::clean();
     SEventModel::clean();
     SNetworkModel::clean();

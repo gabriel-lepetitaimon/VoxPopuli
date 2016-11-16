@@ -22,6 +22,7 @@ public:
     
     int port() const {return _oscListener->port();}
     void setPort(int port);
+    void stopServer(){ _oscListener->stopServer();}
     
     qosc::Listener* oscListener() {return _oscListener;}
     

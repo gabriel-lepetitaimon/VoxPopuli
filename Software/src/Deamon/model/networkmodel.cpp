@@ -2,6 +2,7 @@
 #include "networkmodel.h"
 
 #include "xbee/xbeeinterface.h"
+#include "qosc.h"
 
 NetworkModel::NetworkModel()
     :JSonModel("network")
@@ -123,16 +124,16 @@ void RemoteList::removeRemote(QString address)
     }
 }
 
-bool RemoteList::emulateRemote(QString name, QString osc)
+bool RemoteList::emulateRemote(QString name, QString osc, QString ipPort)
 {
     foreach (Remote* r, _remotes) {
         if(r->name() == name)
             return false;
-        if(r->get("osc").toString() == osc)
+        if(!osc.isEmpty() && r->get("osc").toString() == osc)
             return false;
     }
 
-    createSubNode(name, EmulatedRemote::createEmulatedRemoteJSon(osc));
+    createSubNode(name, EmulatedRemote::createEmulatedRemoteJSon(osc, ipPort));
 
     return true;
 }
@@ -227,11 +228,21 @@ Remote *RemoteList::byName(QString name)
     return 0;
 }
 
-RealRemote *RemoteList::byAddr(QString addr)
+RealRemote *RemoteList::byMAC(QString mac)
 {
     for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
         RealRemote *r = dynamic_cast<RealRemote*>(*it);
-        if(r && r->macAddress()==addr)
+        if(r && r->macAddress()==mac)
+            return r;
+    }
+    return 0;
+}
+
+EmulatedRemote *RemoteList::byOSC(QString osc)
+{
+    for(auto it = _remotes.begin(); it!=_remotes.end(); it++){
+        EmulatedRemote *r = dynamic_cast<EmulatedRemote*>(*it);
+        if(r && r->oscAddress()==osc)
             return r;
     }
     return 0;
@@ -531,21 +542,57 @@ JSonNode::SetError RealRemote::fastTrigger(FTriggerEvent e, const HexData &v)
  *           Emulated Remote                *
  *******************************************/
 
-EmulatedRemote::EmulatedRemote(QString name, RemoteList *list, QString oscAddress)
+EmulatedRemote::EmulatedRemote(QString name, RemoteList *list, QString oscAddress, QString ipPort)
     :Remote(name, list)
 {
     _jsonData["osc"] = oscAddress;
+    _jsonData["ipPort"] = ipPort;
 }
 
-QJsonObject EmulatedRemote::createEmulatedRemoteJSon( QString oscAddress)
+QJsonObject EmulatedRemote::createEmulatedRemoteJSon( QString oscAddress, QString ipPort)
 {
     QJsonObject o = Remote::createRemoteJSon();
     o.insert("osc", oscAddress);
+    o.insert("ipPort", ipPort);
     return o;
 }
 
 EmulatedRemote::~EmulatedRemote()
 {
+}
+
+QString EmulatedRemote::forwardIP() const
+{
+    QString ipPort = _jsonData["ipPort"].toString();
+    if(ipPort.count(':')!=1);
+        return "";
+    return ipPort.split(':').first();
+}
+
+int EmulatedRemote::forwardPort() const
+{
+    QString ipPort = _jsonData["ipPort"].toString();
+    if(ipPort.count(':')!=1)
+        return -1;
+    return ipPort.split(':').last().toInt();
+}
+
+void EmulatedRemote::readOsc(QVariantList args)
+{
+    if(args.size()<2 || args.at(0).type()!=QVariant::String || args.at(1).type()!=QVariant::Bool)
+        return;
+    
+    bool state = args.at(1).toBool();
+    if(args.at(0).toString()=="up")
+        setButtonState(BUTTON_UP, state);
+    else if(args.at(0).toString()=="down")
+        setButtonState(BUTTON_DOWN, state);
+    else if(args.at(0).toString()=="left")
+        setButtonState(BUTTON_LEFT, state);
+    else if(args.at(0).toString()=="right")
+        setButtonState(BUTTON_RIGHT, state);
+    else if(args.at(0).toString()=="action")
+        setButtonState(BUTTON_ACTION, state);
 }
 
 bool EmulatedRemote::execFunction(QString function, QStringList args, const std::function<void (QString)> &returnCb)
@@ -558,6 +605,7 @@ void EmulatedRemote::generateHelp(bool function)
     if(function){
     }else{
         addHelp("osc", "OSC address of this emulated remote (optionnal)", true);
+        addHelp("ipPort", "OSC ip and port to where LED changes should be forwarded (the format should be \"ip:port\")", true);
     }
 
     Remote::generateHelp(function);
@@ -579,6 +627,11 @@ JSonNode::SetError EmulatedRemote::setValue(QString name, QString value)
     else if(name == "osc"){
         setString(name, value);
         return NoError;
+    }else if(name == "ipPort"){
+         if(value.count(':')!=1)
+             return WrongArg;
+         setString("ipPort", value);
+         return NoError;
     }else
         return Remote::setValue(name, value);
 
@@ -595,14 +648,24 @@ JSonNode::SetError EmulatedRemote::setValue(QString name, QString value)
 JSonNode::SetError EmulatedRemote::fastTrigger(FTriggerEvent e, const HexData &v)
 {
     //Todo: OSC trigger...
-    if(e==LED){
-
-    }else if(e==LED1){
-
-    }else if(e==LED2){
-
-    }else if(e==LED3){
-
+    if(forwardPort()!=-1){
+        QVariantList args;
+        
+        bool skip = false;
+        if(e==LED){
+            args<<"LED";
+        }else if(e==LED1){
+            args<<"LED1";
+        }else if(e==LED2){
+            args<<"LED2";
+        }else if(e==LED3){
+            args<<"LED3";
+        }else
+            skip = true;
+        
+        args<<v.toInt();
+        if(!skip)
+            qosc::sendMsg(forwardIP(), forwardPort(), oscAddress(), args);
     }
 
     return Remote::fastTrigger(e,v);

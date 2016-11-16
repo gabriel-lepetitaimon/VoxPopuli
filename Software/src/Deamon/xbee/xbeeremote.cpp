@@ -115,6 +115,6 @@ Remote *XBeeRemote::remoteModel()
 {
     if(_remoteModel)
         return _remoteModel;
-    _remoteModel = SNetworkModel::ptr()->remotes()->byAddr(QString::fromStdString(intToHexStr(_addr)));
+    _remoteModel = SNetworkModel::ptr()->remotes()->byMAC(QString::fromStdString(intToHexStr(_addr)));
     return _remoteModel;
 }

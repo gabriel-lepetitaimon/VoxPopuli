@@ -1,4 +1,5 @@
 #include "oscinterface.h"
+#include "networkmodel.h"
 
 /********************************************
  *             OSC Interface                *
@@ -20,7 +21,7 @@ void OscInterface::setOscAddress(const QString& address)
     if(!_oscAddress.startsWith('/')) _oscAddress.prepend('/');
     if(!_oscAddress.endsWith('/'))   _oscAddress.append('/');
     
-    _oscListener->setAddressStartFilter(_oscAddress);
+    _oscListener->setAddressFilter(_oscAddress);
 }
 
 void OscInterface::setPort(int port)
@@ -30,7 +31,20 @@ void OscInterface::setPort(int port)
 
 void OscInterface::readOscMsg(QString addr, QVariantList args)
 {
-    qWarning()<<"OSC | "<<addr<<args;
+    QString simpleAddr(addr);
+    simpleAddr.remove(0, _oscAddress.length());
+    
+    EmulatedRemote* r=0;
+    if(args.size()>=1 && args.first()=="emulate"){
+        if(simpleAddr.contains('/'))
+            return;
+        QString ipPort = "";
+        if(args.size()>=2)
+            ipPort = args.at(1).toString();
+        SNetworkModel::ptr()->remotes()->emulateRemote(simpleAddr, addr, ipPort);
+    }else if(r = SNetworkModel::ptr()->remotes()->byOSC(addr)){
+        r->readOsc(args);
+    }
 }
 
 JSonNode::SetError OscInterface::setValue(QString name, QString value)

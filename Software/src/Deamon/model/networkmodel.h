@@ -48,7 +48,8 @@ public:
     bool createSubNode(QString name, const QJsonObject& data);
 
     Remote* byName(QString name);
-    RealRemote *byAddr(QString addr);
+    RealRemote* byMAC(QString mac);
+    EmulatedRemote* byOSC(QString osc);
 
     QList<Remote*>& remotes() {return _remotes;}
 
@@ -57,7 +58,7 @@ public:
 public slots:
     bool addRemote(QString address);
     void removeRemote(QString address);
-    bool emulateRemote(QString name, QString osc);
+    bool emulateRemote(QString name, QString osc="", QString ipPort="");
     bool removeEmulatedRemote(QString name);
 
 protected:
@@ -111,13 +112,16 @@ protected:
 class EmulatedRemote: public Remote{
 
 public:
-    EmulatedRemote(QString name, RemoteList* list, QString oscAddress = "");
-    static QJsonObject createEmulatedRemoteJSon(QString oscAddress = "");
+    EmulatedRemote(QString name, RemoteList* list, QString oscAddress = "", QString ipPort = "");
+    static QJsonObject createEmulatedRemoteJSon(QString oscAddress = "", QString ipPort="");
 
     virtual ~EmulatedRemote();
 
     QString oscAddress() const {return _jsonData.value("osc").toString("");}
+    QString forwardIP() const;
+    int forwardPort() const;
 
+    void readOsc(QVariantList args);
     virtual SetError fastTrigger(FTriggerEvent e, const HexData& v);
 
 protected:

@@ -9,11 +9,11 @@ Item {
     
     function ledChanged(led, intensity){
         if(led==1){
-            LED1.intensity = intensity;
+            led1.intensity = intensity;
         }else if(led==2){
-            LED2.intensity = intensity;
+            led2.intensity = intensity;
         }else if(led==3){
-            LED3.intensity = intensity;
+            led3.intensity = intensity;
         }
     }
     

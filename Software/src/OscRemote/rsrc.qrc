@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file alias="remote.svg">../../rsrc/remoteSimple.svg</file>
+        <file>RemoteButton.qml</file>
+        <file>LED.qml</file>
+    </qresource>
+</RCC>

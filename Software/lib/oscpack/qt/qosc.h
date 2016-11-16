@@ -21,7 +21,7 @@ class Listener: protected QThread, osc::OscPacketListener
 {
     Q_OBJECT
     
-    QRegExp _addressFilter;
+    QString _addressFilter;
     UdpListeningReceiveSocket* _socket = 0;
     int _port = -1;
     int _state = 0;
@@ -33,8 +33,7 @@ public:
     virtual ~Listener();
     
     void setAddressFilter(QString addressFilter);
-    void setAddressStartFilter(QString addressStart);
-    QRegExp getAddressFilter() const {return _addressFilter;}
+    QString getAddressFilter() const {return _addressFilter;}
     
     bool addListener(QObject* listener);
     bool removeListener(QObject* listener);

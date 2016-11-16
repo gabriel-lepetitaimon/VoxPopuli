@@ -19,12 +19,7 @@ Listener::~Listener()
 }
 
 void Listener::setAddressFilter(QString addressFilter){
-    _addressFilter = QRegExp(addressFilter);
-}
-
-void Listener::setAddressStartFilter(QString addressStart)
-{
-    _addressFilter = QRegExp("^" + addressStart);
+    _addressFilter = addressFilter;
 }
 
 bool Listener::addListener(QObject *listener)
@@ -70,7 +65,7 @@ void Listener::stopServer()
 void Listener::ProcessMessage(const osc::ReceivedMessage &m, const IpEndpointName &/*remoteEndpoint*/)
 {
     QString addr = m.AddressPattern();
-    if(!_addressFilter.exactMatch(addr))
+    if(!addr.startsWith(_addressFilter))
         return;
     
     QVariantList l = decodeMsg(m);

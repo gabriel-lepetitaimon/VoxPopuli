@@ -5,7 +5,7 @@ QT += core network
 QT -= gui
 
 debug{
-	DEFINES += XBEE_SERIAL_VERBOSE
+	#DEFINES += XBEE_SERIAL_VERBOSE
 }
 
 CONFIG += c++11, console
@@ -38,7 +38,10 @@ SOURCES += VPDeamon.cpp \
     model/eventmodel.cpp \
     model/virtualnetwork.cpp \
     model/eventtrigger.cpp \
-    model/patch.cpp
+    model/patch.cpp \
+    model/eventprototype.cpp \
+    model/midiinterface.cpp \
+    model/oscinterface.cpp
 
 HEADERS += \
     telnet/telnetserver.h \
@@ -52,7 +55,10 @@ HEADERS += \
     model/eventmodel.h \
     model/virtualnetwork.h \
     model/eventtrigger.h \
-    model/patch.h
+    model/patch.h \
+    model/eventprototype.h \
+    model/oscinterface.h \
+    model/midiinterface.h
 
 INCLUDEPATH += $$SRC/lib
 
@@ -78,26 +84,5 @@ unix{
 #XBee
 include($$LIB/XBee/XBee.pri)
 
-
 #OSC
-OSCLIB = $$LIB/oscpack
-
-HEADERS += $$files($$OSCLIB/osc/*.h)
-HEADERS += $$files($$OSCLIB/ip/*.h)
-
-unix:!macx:!ios:!android {
-    DEFINES += OSC_HOST_LITTLE_ENDIAN __LINUX__
-	SOURCES += $$files($$OSCLIB/osc/*.cpp)
-	SOURCES += $$files($$OSCLIB/ip/*.cpp)
-
-    SOURCES += $$files($$OSCLIB/ip/posix/*.cpp)
-}
-win32{
-    DEFINES += OSC_HOST_LITTLE_ENDIAN __WIN32__ WINDOWS
-    SOURCES += $$files($$OSCLIB/ip/win32/*.cpp)
-	#LIBS += $$OSCLIB/MinGW/liboscpack.a
-	LIBS += -lws2_32 -lwinmm
-}
-
-INCLUDEPATH += $$OSCLIB
-    ressources.qrc
+include($$LIB/oscpack/osc.pri)

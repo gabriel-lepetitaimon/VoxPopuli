@@ -3,6 +3,7 @@
 #include "xbee/xbeeinterface.h"
 #include "model/networkmodel.h"
 #include "model/eventmodel.h"
+#include "model/oscinterface.h"
 
 int main(int argc, char *argv[])
 {

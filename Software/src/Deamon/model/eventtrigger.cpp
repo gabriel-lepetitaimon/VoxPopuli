@@ -2,6 +2,7 @@
 
 #include "eventtrigger.h"
 #include "eventmodel.h"
+#include "midiinterface.h"
 #include "misc.h"
 
 #ifdef X11_SUPPORT

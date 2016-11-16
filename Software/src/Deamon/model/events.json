@@ -3,6 +3,11 @@
     {
 
     },
+"OSC":
+    {
+        "port": 9001,
+        "address": "/VPDeamon/"
+    },
 "VirtualNet":
     {
     }
